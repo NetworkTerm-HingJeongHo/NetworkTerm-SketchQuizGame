@@ -313,7 +313,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			WaitForSingleObject(g_hReadEvent, INFINITE);
 			isMessageQueue = TRUE;
-			SetEvent(g_hReadEvent);
+			SetEvent(g_hWriteEvent);
 
 			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
 			WaitForSingleObject(g_hReadEvent, INFINITE);
