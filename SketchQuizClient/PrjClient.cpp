@@ -343,21 +343,6 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_ERASEPIC:
 			send(g_sock, (char*)&g_erasepicmsg, SIZE_TOT, 0);
 			return TRUE;
- 		case IDCANCEL:
-
-			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
-			WaitForSingleObject(g_hReadEvent, INFINITE);
-			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
-			snprintf(g_chatmsg.msg, sizeof(g_chatmsg), "[%s]님이 퇴장하였습니다.", NICKNAME_CHAR);
-			SetEvent(g_hWriteEvent);
-
-			closesocket(g_sock);
-			EndDialog(hDlg, IDCANCEL);
-			//ShowWindow(hDlg, SW_HIDE); 
-			//ShowWindow(hwndHome, SW_SHOW);
-
-			//CreateRankDlg(hDlg);
-			return TRUE;
 		//	======== 지윤 ==========
 		case IDC_PENCOLOR:
 			SelectPenColor(&g_clientDrawDetailInformation);
@@ -366,6 +351,9 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SelectLineWidth(hDlg, &g_clientDrawDetailInformation);
 			return TRUE;
 
+		case IDC_EXIT_BUTTON:
+			ShowWindow(hDlg, SW_HIDE);
+			return TRUE;
 		// ========= 정호 ===========
 		case IDC_FIGURE:
 			SelectFigureOption(hDlg, g_currentSelectFigureMode);
@@ -392,6 +380,21 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			return TRUE;
 		//
+		case IDCANCEL:
+
+			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
+			WaitForSingleObject(g_hReadEvent, INFINITE);
+			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
+			snprintf(g_chatmsg.msg, sizeof(g_chatmsg), "[%s]님이 퇴장하였습니다.", NICKNAME_CHAR);
+			SetEvent(g_hWriteEvent);
+
+			closesocket(g_sock);
+			EndDialog(hDlg, 0);
+			//ShowWindow(hDlg, SW_HIDE); 
+			//ShowWindow(hwndHome, SW_SHOW);
+
+			//CreateRankDlg(hDlg);
+			return TRUE;
 		}
 	}
 	return FALSE;
@@ -639,7 +642,7 @@ LRESULT CALLBACK LoginWndProc(HWND hwndLogin, UINT msg, WPARAM wParam, LPARAM lP
 //-------------------------------------홈 윈도우 프로시저 -----------------------------------------------------------------------//
 // 윈도우 프로시저 (지안)
 LRESULT CALLBACK HomeWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-
+	static HWND hGameDialog = NULL;
 	switch (msg) {
 
 	case WM_CREATE:
@@ -677,16 +680,33 @@ LRESULT CALLBACK HomeWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 
 		case ID_CHANNEL_A_BUTTON: // TCP 채널 버튼 클릭시
 			channel = CHANNEL_TCP;	// tcp 채널 버전 0으로 변경
-			ShowWindow(g_hDrawDlg, SW_SHOW);
-			CreateAndShowDialog(hwnd);
+			if (hGameDialog) {
+				EndDialog(hGameDialog, 0);
+				hGameDialog = NULL;
+			}
+			hGameDialog = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), hwnd, DlgProc);
+			if (hGameDialog) {
+				ShowWindow(hGameDialog, SW_SHOW);
+			}
+			//ShowWindow(g_hDrawDlg, SW_SHOW);
+			//CreateAndShowDialog(hwnd);
 			break;
 		case ID_CHANNEL_B_BUTTON: // UDP 채널1 버튼 클릭시
 			channel = CHANNEL_UDP1;	//udp 채널 버전 1로 변경
-			CreateAndShowDialog(hwnd);
+								// 채널 A 게임 창 닫기
+			if (hGameDialog) {
+				EndDialog(hGameDialog, 0);
+				hGameDialog = NULL;
+			}
+			hGameDialog = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), hwnd, DlgProc);
+			if (hGameDialog) {
+				ShowWindow(hGameDialog, SW_SHOW);
+			}
+			//CreateAndShowDialog(hwnd);
 			break;
 		case ID_CHANNEL_RANDOM_BUTTON: // UDP 채널2 버튼 클릭시
 			channel = CHANNEL_UDP2;	//udp 채널 버전 2로 변경
-			CreateAndShowDialog(hwnd);
+			//CreateAndShowDialog(hwnd);
 			break;
 		default:
 			break;
