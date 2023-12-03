@@ -24,7 +24,6 @@
 #define IDC_FIGURE                      4100
 
 #define IDC_ANNOUNCE                    5010
-#define IDD_DIALOG2                     5101
 #define IDC_EDIT1ST                     5102
 #define IDC_EDIT_TIMER                  5103
 #define IDC_EDIT_WORD                   5104
