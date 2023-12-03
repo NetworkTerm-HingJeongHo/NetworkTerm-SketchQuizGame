@@ -76,15 +76,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	ShowWindow(g_hMainWindow, nCmdShow);
 	UpdateWindow(g_hMainWindow);
 
+
 	// 메시지 루프
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
-		if (!IsDialogMessage(g_hMainWindow, &msg)) // 대화 상자 메시지 처리
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	}
 
 	// 이벤트 객체 제거
