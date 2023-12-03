@@ -431,5 +431,4 @@ void addMessage(char* message) {
 	}
 	strcpy(g_msgQueue.queue[g_msgQueue.tail], message);
 	g_msgQueue.tail = (g_msgQueue.tail + 1) % BUFSIZE;
-
 }

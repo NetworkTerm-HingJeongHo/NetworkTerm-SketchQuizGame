@@ -164,6 +164,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static HWND hBtnPenColor;
 	static HWND hLineWidth;
 	static HWND hDlgChannel;
+	static HWND hDrawingTextId;
+	static HWND hDrawingText;
 
 	// ========= 정호 =========
 	static HWND hFigureSelect;	// 그릴 도형 선택
@@ -203,6 +205,12 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		hLineWidth = GetDlgItem(hDlg, IDC_LINEWIDTH);
 		g_hLineWidth = hLineWidth; // 전역 변수에 저장
 
+		hDrawingTextId = GetDlgItem(hDlg, IDC_DRAWINGTEXTID);
+		g_hDrawingTextId = hDrawingTextId; // 전역 변수에 저장
+
+		hDrawingText = GetDlgItem(hDlg, IDC_DRAWINGTEXT);
+		g_hDrawingText = hDrawingText; // 전역 변수에 저장
+
 		// ========= 정호 =========
 		// 그릴 도형 선택하는 핸들러를 얻어서 전역 변수에 저장
 		hFigureSelect = GetDlgItem(hDlg, IDC_FIGURE);
@@ -220,6 +228,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		// ========= 지윤 =========
 		EnableWindow(g_hBtnPenColor, FALSE);
 		EnableWindow(g_hLineWidth, FALSE);
+		ShowWindow(g_hDrawingTextId, SW_HIDE);
+		ShowWindow(g_hDrawingText, SW_HIDE);
 
 		AddLineWidthOption(hDlg);
 
@@ -304,6 +314,9 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// ========= 지윤 =========
 			EnableWindow(g_hBtnPenColor, TRUE);
 			EnableWindow(g_hLineWidth, TRUE);
+			ShowWindow(g_hDrawingTextId, SW_SHOW);
+			ShowWindow(g_hDrawingText, SW_SHOW);
+
 			DisplayDrawingUserID(hDlg, userIDs);
 
 			// ========= 연경 =========

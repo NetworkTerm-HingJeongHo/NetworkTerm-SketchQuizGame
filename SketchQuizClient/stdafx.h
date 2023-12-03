@@ -48,6 +48,8 @@ static HWND			 g_hMainWindow;   // 처음 윈도우창 핸들
 static HWND			 g_hDialog;       // 그림판 다이어로그 핸들
 static HWND			 g_hBtnPenColor;  // [색상 변경] 버튼
 static HWND			 g_hLineWidth;    // 선 굵기 콤보박스
+static HWND			 g_hDrawingTextId;   // 그림 그리는 사람 아이디
+static HWND			 g_hDrawingText;     // 그림 그리는 사람 안내 문구
 
 // ============= 연경 =============
 // 채팅 관련 변수
