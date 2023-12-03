@@ -156,6 +156,11 @@ int main(int argc, char* argv[])
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
+		// =========== 지윤 ============
+	case WM_CREATE:
+		InitializeListView(hWnd);
+		return 0;
+		// =============================
 	case WM_SOCKET: // 소켓 관련 윈도우 메시지
 		ProcessSocketMessage(hWnd, uMsg, wParam, lParam);
 		return 0;
@@ -197,6 +202,11 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// 접속한 클라이언트 정보 출력
 			printf("\n[TCP/IPv4 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", 
 				inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
+			// =========== 지윤 ============
+			AddClientToListView(ntohs(clientaddr.sin_port));
+			DisplayClientList();
+			// =============================
+			
 			// 소켓 정보 추가
 			AddSocketInfoTCP(client_sock);
 			retval = WSAAsyncSelect(client_sock, hWnd,
@@ -468,6 +478,10 @@ void RemoveSocketInfo(SOCKET sock)
 	inet_ntop(AF_INET, &clientaddr.sin_addr, addr, sizeof(addr));
 	printf("[TCP/IPv4 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d\n",
 		addr, ntohs(clientaddr.sin_port));
+	// =========== 지윤 ============
+	RemoveClientFromListView(ntohs(clientaddr.sin_port));
+	DisplayClientList();
+	// =============================
 
 	// 클라이언트 소켓 제거
 	for (int i = 0; i < nTotalSockets; i++)
