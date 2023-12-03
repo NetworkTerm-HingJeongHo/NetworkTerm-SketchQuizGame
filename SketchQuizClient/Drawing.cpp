@@ -50,14 +50,18 @@ void SelectLineWidth(HWND hDlg, DRAW_DETAIL_INFORMATION* g_drawDetailInformation
 	}
 }
 
-// 랜덤하게 사용자 아이디 선택하는 함수
-char* GetRandomUserID(char* userIDs[], int numUsers) {
-	if (numUsers <= 0) {
-		return NULL; // 유효하지 않은 인자 처리
+// 사용자 ID 배열에 새 사용자 추가 함수
+void AddUser(_TCHAR* userIDs[], _TCHAR* newUserID) {
+	if (numUsers < MAX_USERS) {
+		userIDs[numUsers] = newUserID;
+		numUsers++;
 	}
+}
 
+// 랜덤하게 사용자 아이디 선택하는 함수
+_TCHAR* SetRandomUserID(_TCHAR* userIDs[]) {
 	// 시드값 설정
-	srand(time(NULL));
+	srand((unsigned)time(NULL));
 
 	// 랜덤 인덱스 생성
 	int randomIndex = rand() % numUsers;
@@ -66,6 +70,18 @@ char* GetRandomUserID(char* userIDs[], int numUsers) {
 	return userIDs[randomIndex];
 }
 
+void DisplayDrawingUserID(HWND hDlg, _TCHAR* userIDs[]) {
+	HWND hStaticText = GetDlgItem(hDlg, IDC_DRAWINGTEXTID);
+	if (hStaticText != NULL) {
+		_TCHAR* drawingUserID = SetRandomUserID(userIDs); // 랜덤 사용자 아이디를 가져옴
+		if (drawingUserID != NULL) {
+			SetWindowText(hStaticText, drawingUserID); // 텍스트 설정
+		}
+		else {
+			SetWindowText(hStaticText, _T("로그인먼저!"));
+		}
+	}
+}
 
 // ======================= 정호 =======================
 

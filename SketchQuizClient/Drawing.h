@@ -1,5 +1,11 @@
 #pragma once
 
+// ======================= 지윤 =======================
+#define MAX_USERS 10 // 최대 사용자 수
+static int			numUsers; // 현재 사용자 수
+static _TCHAR*		userIDs[MAX_USERS];
+static _TCHAR*		drawingUserID;
+
 // 타입 정의
 // ======================= 정호 =======================
 
@@ -40,9 +46,9 @@ void CreateAndShowDialog(HWND hWnd);
 void SelectPenColor(DRAW_DETAIL_INFORMATION* g_drawDetailInformation);
 void AddLineWidthOption(HWND hDlg);
 void SelectLineWidth(HWND hDlg, DRAW_DETAIL_INFORMATION* g_drawDetailInformation);
-char* GetRandomUserID(char* userIDs[], int numUsers);
-
-
+void AddUser(_TCHAR* userIDs[], _TCHAR* newUserID);
+_TCHAR* SetRandomUserID(_TCHAR* userIDs[]);
+void DisplayDrawingUserID(HWND hDlg, _TCHAR* userIDs[]);
 
 
 // ======================= 정호 =======================
