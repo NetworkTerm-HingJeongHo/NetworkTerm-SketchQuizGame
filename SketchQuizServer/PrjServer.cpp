@@ -9,7 +9,7 @@ SOCKADDR_IN UDPSocketInfoArray[FD_SETSIZE]; //UDP 유저들 있는 변수
 
 SOCKET listen_sock4;
 SOCKADDR_IN serveraddr;
-SOCKET socket_UDP;
+SOCKET socket_UDP_groupA, socket_UDP_groupB;
 
 // ============= 연경 =============== 
 //char* g_msgQueue[BUFSIZE];    // 메시지 원형 큐: 이전 대화내용 표시. 꽉 차면 가장 오래된 메시지부터 지워진다.
@@ -75,39 +75,37 @@ int main(int argc, char* argv[])
 	}
 	/*----- TCP/IPv4 소켓 초기화 종료 -----*/
 
-	/*----- TCP/IPv6 소켓 초기화 시작 -----*/
-	// 소켓 생성
-	SOCKET listen_sock6 = socket(AF_INET6, SOCK_STREAM, 0);
-	if (listen_sock6 == INVALID_SOCKET) err_quit("socket()");
-
-	// bind()
-	struct sockaddr_in6 serveraddr6;
-	memset(&serveraddr6, 0, sizeof(serveraddr6));
-	serveraddr6.sin6_family = AF_INET6;
-	serveraddr6.sin6_addr = in6addr_any;
-	serveraddr6.sin6_port = htons(SERVERPORT);
-	retval = bind(listen_sock6, (struct sockaddr *)&serveraddr6,
-		sizeof(serveraddr6));
-	if (retval == SOCKET_ERROR) err_quit("bind()");
-
-	// listen()
-	retval = listen(listen_sock6, SOMAXCONN);
-	if (retval == SOCKET_ERROR) err_quit("listen()");
-	/*----- TCP/IPv6 소켓 초기화 종료 -----*/
-
 	/*----- UDP/IPv4 소켓 초기화 시작 -----*/
 	// TODO: 소켓을 생성하고 초기화한다. == 정호 ==
-	socket_UDP = socket(AF_INET, SOCK_DGRAM, 0);
-	if (socket_UDP == INVALID_SOCKET)
+
+	// GroupA
+	socket_UDP_groupA = socket(AF_INET, SOCK_DGRAM, 0);
+	if (socket_UDP_groupA == INVALID_SOCKET)
+	{
+		err_quit("socket()");
+	}
+	// 멀티캐스트 그룹 가입
+	struct ip_mreq mreq;
+	mreq.imr_multiaddr.s_addr = inet_addr(SERVERIP4_CHAR_UDP1); // 가입하거나 탈퇴할 IPv4 멀티케스트 address(주소) (가입할 동아리)
+	mreq.imr_interface.s_addr = htonl(INADDR_ANY);		// 로컬 ip address (나)
+	retval = setsockopt(socket_UDP_groupA, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+		(char*)&mreq, sizeof(mreq));
+	if (retval == SOCKET_ERROR) err_quit("setsockopt()");
+
+	// GroupB
+	socket_UDP_groupB = socket(AF_INET, SOCK_DGRAM, 0);
+	if (socket_UDP_groupB == INVALID_SOCKET)
 	{
 		err_quit("socket()");
 	}
 
-	retval = bind(socket_UDP, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR)
-	{
-		err_quit("bind()");
-	}
+	// 멀티캐스트 그룹 가입
+	mreq.imr_multiaddr.s_addr = inet_addr(SERVERIP4_CHAR_UDP2); // 가입하거나 탈퇴할 IPv4 멀티케스트 address(주소) (가입할 동아리)
+	retval = setsockopt(socket_UDP_groupB, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+		(char*)&mreq, sizeof(mreq));
+	if (retval == SOCKET_ERROR) err_quit("setsockopt()");
+
+
 	/*----- UDP/IPv4 소켓 초기화 종료 -----*/
 
 	/*----- UDP/IPv6 소켓 초기화 시작 -----*/
@@ -136,7 +134,10 @@ int main(int argc, char* argv[])
 	// UDP는 TCP와 달리 연결이 필요없으므로
 	// FD_ACCEPT를 하지 않음.
 	// FD_READ로 데이터를 수신할 수 있도록 설정
-	retval = WSAAsyncSelect(socket_UDP, hWnd, WM_SOCKET, FD_READ | FD_CLOSE);
+	retval = WSAAsyncSelect(socket_UDP_groupA, hWnd, WM_SOCKET, FD_READ | FD_CLOSE);
+	if (retval == SOCKET_ERROR) err_quit("WSAAsyncSelect()");
+
+	retval = WSAAsyncSelect(socket_UDP_groupB, hWnd, WM_SOCKET, FD_READ | FD_CLOSE);
 	if (retval == SOCKET_ERROR) err_quit("WSAAsyncSelect()");
 
 	MSG msg;
@@ -209,7 +210,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case FD_READ:
 		// TCP socket
 		printf("FD_READ\n");
-		if (wParam != socket_UDP)
+		if (wParam != socket_UDP_groupA && wParam != socket_UDP_groupB)
 		{
 			ptr = GetSocketInfo(wParam);
 			if (ptr->recvbytes > 0) {
@@ -233,12 +234,27 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			// 채팅 데이터만 표기한다.
 		}
-		// UDP socket
+		// UDP socket - Group A
+		else if(wParam == socket_UDP_groupA)
+		{
+			// 데이터 받기
+			addrlen = sizeof(clientaddr);
+			retval = recvfrom(socket_UDP_groupA, buf, BUFSIZE, 0, (SOCKADDR*)&clientaddr, &addrlen);
+			printf("[UDP] 데이터 길이 : %d, 데이터 : %s\n", retval, buf);
+			if (retval == SOCKET_ERROR) {
+				err_display("recvfrom()");
+				return;
+			}
+
+			// UDP로 접속한 클라 정보 수집
+			AddSocketInfoUDP(clientaddr);
+		}
+		// UDP socket - Group B
 		else
 		{
 			// 데이터 받기
 			addrlen = sizeof(clientaddr);
-			retval = recvfrom(socket_UDP, buf, BUFSIZE, 0, (SOCKADDR*)&clientaddr, &addrlen);
+			retval = recvfrom(socket_UDP_groupB, buf, BUFSIZE, 0, (SOCKADDR*)&clientaddr, &addrlen);
 			printf("[UDP] 데이터 길이 : %d, 데이터 : %s\n", retval, buf);
 			if (retval == SOCKET_ERROR) {
 				err_display("recvfrom()");
@@ -250,7 +266,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 	case FD_WRITE:
 		// UDP 소켓이 아닌 경우 (TCP인 경우)
-		if (wParam != socket_UDP)
+		if (wParam != socket_UDP_groupA && wParam != socket_UDP_groupB)
 		{
 			ptr = GetSocketInfo(wParam);
 			//for (int i = 0; i < nTotalSockets; i++) {
@@ -273,13 +289,28 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			//}
 		}
+		// UDP socket - Group A
+		else if(wParam == socket_UDP_groupA)
+		{
+			for (int i = 0; i < nTotalUDPSockets; i++)
+			{
+				SOCKADDR_IN clientUDP = UDPSocketInfoArray[i];
+				// 데이터 보내기
+				retval = sendto(socket_UDP_groupA, buf, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+				if (retval == SOCKET_ERROR) {
+					err_display("sendto()");
+					return;
+				}
+			}
+		}
+		// UDP socket - Group B
 		else
 		{
 			for (int i = 0; i < nTotalUDPSockets; i++)
 			{
 				SOCKADDR_IN clientUDP = UDPSocketInfoArray[i];
 				// 데이터 보내기
-				retval = sendto(socket_UDP, buf, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+				retval = sendto(socket_UDP_groupB, buf, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
 				if (retval == SOCKET_ERROR) {
 					err_display("sendto()");
 					return;
