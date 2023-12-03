@@ -3,6 +3,7 @@
 #define TYPE_CHAT     1000              // 메시지 타입: 채팅
 #define TYPE_DRAWLINE 1001              // 메시지 타입: 선 그리기
 #define TYPE_ERASEPIC 1002              // 메시지 타입: 그림 지우기
+#define TYPE_ID		  1003				// 메시지 타입: id (지안)
 
 #define WM_DRAWLINE (WM_USER+1)         // 사용자 정의 윈도우 메시지(1)
 #define WM_ERASEPIC (WM_USER+2)         // 사용자 정의 윈도우 메시지(2)
@@ -52,6 +53,15 @@ typedef struct _MESSAGEQUEUE {
 	int head = 0;                 // 원형 큐 인덱스
 	int tail = 0;
 } MESSAGEQUEUE;
+
+// ======== 지안 ======== //
+// 로그인할때 ID 형식
+typedef struct ID
+{
+	int  type;		// 로그인할때 ID 형식
+	char msg[SIZE_DAT];	// id 내용
+} ID_MSG;
+// ====================== //
 
 // 메인 윈도우(첫화면) 프로시저
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

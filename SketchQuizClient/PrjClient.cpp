@@ -844,7 +844,13 @@ LRESULT CALLBACK Home_PassWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 // 클라이언트와 데이터 통신
 DWORD WINAPI LoginProcessClient(LPVOID arg)
 {
+	// ====== 지안 ========= //
+	// id_msg 구조체 초기화
+	ID_MSG id_msg;
+	id_msg.type = TYPE_ID;	//id타입
+	strcpy(id_msg.msg, NICKNAME_CHAR);	//NICKNAME_CHAR일 경우
 
+	// ===================== //
 	int retval;
 	// socket()
 	g_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -864,7 +870,7 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 	len = sizeof(NICKNAME_CHAR);
 
 	// 고정 크기 데이터 전송 (TCP 첫 실행시 한번)
-	retval = sendn(g_sock, (char*)&NICKNAME_CHAR, BUFSIZE, 0, serveraddr, false);
+	retval = sendn(g_sock, (char*)&id_msg, BUFSIZE, 0, serveraddr, false);
 
 	printf("[TCP 클라이언트] %d바이트를 보냈습니다.\n", retval);
 	if (retval == SOCKET_ERROR) {
@@ -872,9 +878,10 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 		//break;
 	}
 
-	char recvBuf[BUFSIZE]; // 데이터 받을 버퍼
 	/*
-	while (retval != SOCKET_ERROR) {
+	char recvBuf[BUFSIZE]; // 데이터 받을 버퍼
+	while (1) {
+
 		// 데이터 받기
 		retval = recvn(g_sock, (char*)&recvBuf, BUFSIZE, 0, serveraddr, false); //TCP가 보낸 서버 받기.
 		//retval = recvn(g_sock, buf, retval, 0); // retval를 다시 넣은 이유 : 내가 보낸만큼 다시 받기 위해서이다. (10byte보냈으면 10만큼 받게 N을 설정해준거)
@@ -882,8 +889,8 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 			err_display("recv()");
 			break;
 		}
-		else if (retval == 0)
-			break;
+		//else if (retval == 0)
+		//	break;
 		// 받은 데이터 출력
 		recvBuf[retval] = '\0';
 		printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
@@ -891,9 +898,7 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 		MessageBox(NULL, _T("지안이가 구현중인 UDP 채널1 IPv4 클라이언트 소켓임"), _T("알림"), MB_ICONERROR);
 	}
 	*/
-	//retval = sendn(g_sock, (char*)&len, sizeof(int), 0);
-	//// 가변 크기 데이터 전송
-	//retval = sendn(g_sock, (char*)&g_chatmsg, len, 0);
+
 	if (retval == SOCKET_ERROR)
 		return 0;
 
