@@ -74,6 +74,7 @@ static BOOL isGameOver = FALSE;
 static BOOL isOwner = FALSE;  // 문제를 내는 클라이언트일 경우 isOwner는 TRUE이다. 문제를 맞추는 사람인 경우 FALSE.
 
 
+
 static char NICKNAME_CHAR[256];
 
 /* 통신 관련 전역 변수 */
