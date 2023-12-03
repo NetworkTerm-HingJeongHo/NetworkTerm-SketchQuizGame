@@ -118,8 +118,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		if (LOWORD(wParam) == 1) // '그림판' 버튼 클릭
 		{
 			CreateAndShowDialog(hWnd);
-
-			ShowWindow(hWnd, SW_HIDE);
 		}
 		//---지안 ----//
 		else if (LOWORD(wParam) == 2) // '로그인' 버튼 클릭
@@ -130,7 +128,6 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		{
 			CreateAndShowWindow_Home(hwndHome); // 메인 생성
 		}
-
 		//-----------//
 		break;
 	}

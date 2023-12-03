@@ -6,6 +6,7 @@ void CreateAndShowDialog(HWND hWnd)
 {
 	g_hDialog = CreateDialog(g_hInstance, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, DlgProc);
 	ShowWindow(g_hDialog, SW_SHOW);
+	ShowWindow(hWnd, SW_HIDE);
 }
 
 void SelectPenColor(DRAW_DETAIL_INFORMATION* g_drawDetailInformation) {
