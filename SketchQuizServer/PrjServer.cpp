@@ -215,7 +215,44 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				err_display("WSAAsyncSelect()");
 				RemoveSocketInfo(client_sock);
 			}
+
+
 		}
+
+		// ========== 연경 =========
+		// TCP socket
+		if (wParam != socket_UDP_groupA && wParam != socket_UDP_groupB) {
+			//for (int i = 0; i < nTotalSockets; i++) {
+			//	SOCKETINFO* ptr = SocketInfoArray[i];					
+			SOCKETINFO* ptr2 = SocketInfoArray[nTotalSockets-1];
+			retval = send(ptr2->sock, (char*)&g_msgQueue, BUFSIZE, 0);
+			if (retval == SOCKET_ERROR) {
+				err_display("send()");
+			}
+			
+		}
+		// UDP socket - Group A
+		else if (wParam == socket_UDP_groupA) {
+			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets-1];
+			// 데이터 보내기
+			retval = sendto(socket_UDP_groupA, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+			if (retval == SOCKET_ERROR) {
+				err_display("sendto()");
+				return;
+			}
+		}
+		// UDP socket - Group B
+		else if (wParam == socket_UDP_groupB) {
+			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets - 1];
+			// 데이터 보내기
+			retval = sendto(socket_UDP_groupB, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+			if (retval == SOCKET_ERROR) {
+				err_display("sendto()");
+				return;
+			}
+		}
+
+
 		break;
 	case FD_READ:
 		// TCP socket
