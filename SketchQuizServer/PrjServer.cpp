@@ -40,8 +40,6 @@ int main(int argc, char* argv[])
 	ShowWindow(hWnd, SW_SHOWNORMAL);
 	UpdateWindow(hWnd);
 
-	//HWND hDlg = (HWND)DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL, DialogProc);
-
 	int retval;
 
 	// 윈속 초기화
@@ -215,44 +213,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				err_display("WSAAsyncSelect()");
 				RemoveSocketInfo(client_sock);
 			}
-
-
 		}
-
-		// ========== 연경 =========
-		// TCP socket
-		if (wParam != socket_UDP_groupA && wParam != socket_UDP_groupB) {
-			//for (int i = 0; i < nTotalSockets; i++) {
-			//	SOCKETINFO* ptr = SocketInfoArray[i];					
-			SOCKETINFO* ptr2 = SocketInfoArray[nTotalSockets-1];
-			retval = send(ptr2->sock, (char*)&g_msgQueue, BUFSIZE, 0);
-			if (retval == SOCKET_ERROR) {
-				err_display("send()");
-			}
-			
-		}
-		// UDP socket - Group A
-		else if (wParam == socket_UDP_groupA) {
-			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets-1];
-			// 데이터 보내기
-			retval = sendto(socket_UDP_groupA, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
-			if (retval == SOCKET_ERROR) {
-				err_display("sendto()");
-				return;
-			}
-		}
-		// UDP socket - Group B
-		else if (wParam == socket_UDP_groupB) {
-			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets - 1];
-			// 데이터 보내기
-			retval = sendto(socket_UDP_groupB, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
-			if (retval == SOCKET_ERROR) {
-				err_display("sendto()");
-				return;
-			}
-		}
-
-
 		break;
 	case FD_READ:
 		// TCP socket
@@ -380,32 +341,6 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		RemoveSocketInfo(wParam);
 		break;
 	}
-}
-
-// 다이얼로그 프로시저
-INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	HWND hIDListTabCtrl, hChatDataTabCtrl;
-	TCITEM tItem_ID, tItem_ChatData;
-	switch (uMsg)
-	{
-	case WM_INITDIALOG:
-		hIDListTabCtrl = GetDlgItem(hDlg, IDC_IDLIST_TAB);
-		tItem_ID.mask = TCIF_TEXT;
-		tItem_ID.pszText = (LPTSTR)_T("전체");
-		TabCtrl_InsertItem(hIDListTabCtrl, 0, &tItem_ID); // 첫 번째 탭 추가
-
-		tItem_ID.pszText = (LPTSTR)_T("TCP 채널");
-		TabCtrl_InsertItem(hIDListTabCtrl, 1, &tItem_ID); // 두 번째 탭 추가
-		return TRUE;
-	case WM_COMMAND:
-
-	case WM_CLOSE:
-		EndDialog(hDlg, 0); // 다이얼로그 상자 닫기
-		return TRUE;
-	}
-
-	return FALSE;
 }
 
 // 소켓 정보 얻기
