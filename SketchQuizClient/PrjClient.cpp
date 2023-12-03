@@ -304,6 +304,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// ========= 지윤 =========
 			EnableWindow(g_hBtnPenColor, TRUE);
 			EnableWindow(g_hLineWidth, TRUE);
+			DisplayDrawingUserID(hDlg, userIDs);
 
 			// ========= 연경 =========
 			gameStart(g_hTimerStatus, g_hWordStatus);
@@ -585,6 +586,10 @@ LRESULT CALLBACK LoginWndProc(HWND hwndLogin, UINT msg, WPARAM wParam, LPARAM lP
 			
 			_tcscpy(ID_NICKNAME, input_result); // 현재 입력한 ID 저장
 			MessageBox(hwndLogin, ID_NICKNAME, _T("메인 화면으로 이동합니다."), MB_OK);
+
+			// ==================== 지윤 ====================
+			AddUser(userIDs, input_result);
+			// ==============================================
 
 			CreateAndShowWindow_Home(hwndHome); // 메인 생성 및 보이게하기
 			ShowWindow(hwndLogin, SW_HIDE);
