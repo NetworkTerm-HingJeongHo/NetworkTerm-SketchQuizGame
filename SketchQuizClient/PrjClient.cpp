@@ -158,7 +158,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// ========= 연경 =========
 	static HWND hTimer;    // 타이머 표시 
 	static HWND hWord;     // 제시어 표시
-	static HWND hBtnGameStart; // 게임 시작 버튼
+	//static HWND hBtnGameStart; // 게임 시작 버튼
 
 	// ========= 지윤 =========
 	static HWND hBtnPenColor;
@@ -195,8 +195,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		// ========= 연경 =========
 		g_hTimerStatus = GetDlgItem(hDlg, IDC_EDIT_TIMER);  // 타이머 표시하는 EditText 부분 
 		g_hWordStatus = GetDlgItem(hDlg, IDC_EDIT_WORD);    // 제시어 표시하는 EditText 부분
-		hBtnGameStart = GetDlgItem(hDlg, IDC_GAMESTART);
-		EnableWindow(hBtnGameStart, FALSE);
+		//hBtnGameStart = GetDlgItem(hDlg, IDC_GAMESTART);
+		//EnableWindow(hBtnGameStart, FALSE);
 
 		g_hDrawDlg = hDlg;
 		WideCharToMultiByte(CP_ACP, 0, ID_NICKNAME, 256, NICKNAME_CHAR, 256, NULL, NULL); //_TCHAR 형 문자열을 char* 형 문자열로 변경
@@ -323,7 +323,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			DisplayDrawingUserID(hDlg, userIDs);
 
 			// ========= 연경 =========
-			EnableWindow(hBtnGameStart, TRUE);
+			//EnableWindow(hBtnGameStart, TRUE);
 
 			//WaitForSingleObject(g_hReadEvent, INFINITE);
 			//SetEvent(g_hWriteEvent);
@@ -415,15 +415,15 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EndDialog(hDlg, 0);
 			return TRUE;
 		}
-		case IDC_GAMESTART:
-			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
-			WaitForSingleObject(g_hReadEvent, INFINITE);
-			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
-			g_chatmsg.type = TYPE_NOTY;
-			strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
-			SetEvent(g_hWriteEvent);
-			gameStart(g_hTimerStatus, g_hWordStatus);
-			break;
+		//case IDC_GAMESTART:
+		//	// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
+		//	WaitForSingleObject(g_hReadEvent, INFINITE);
+		//	// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
+		//	g_chatmsg.type = TYPE_NOTY;
+		//	strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
+		//	SetEvent(g_hWriteEvent);
+		//	gameStart(g_hTimerStatus, g_hWordStatus);
+		//	break;
 	}
 	return FALSE;
 }
