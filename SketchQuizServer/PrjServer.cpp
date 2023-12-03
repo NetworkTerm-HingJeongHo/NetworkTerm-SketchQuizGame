@@ -40,8 +40,6 @@ int main(int argc, char* argv[])
 	ShowWindow(hWnd, SW_SHOWNORMAL);
 	UpdateWindow(hWnd);
 
-	//HWND hDlg = (HWND)DialogBox(hInstance, MAKEINTRESOURCE(IDD_DIALOG1), NULL, DialogProc);
-
 	int retval;
 
 	// 윈속 초기화
@@ -380,32 +378,6 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		RemoveSocketInfo(wParam);
 		break;
 	}
-}
-
-// 다이얼로그 프로시저
-INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	HWND hIDListTabCtrl, hChatDataTabCtrl;
-	TCITEM tItem_ID, tItem_ChatData;
-	switch (uMsg)
-	{
-	case WM_INITDIALOG:
-		hIDListTabCtrl = GetDlgItem(hDlg, IDC_IDLIST_TAB);
-		tItem_ID.mask = TCIF_TEXT;
-		tItem_ID.pszText = (LPTSTR)_T("전체");
-		TabCtrl_InsertItem(hIDListTabCtrl, 0, &tItem_ID); // 첫 번째 탭 추가
-
-		tItem_ID.pszText = (LPTSTR)_T("TCP 채널");
-		TabCtrl_InsertItem(hIDListTabCtrl, 1, &tItem_ID); // 두 번째 탭 추가
-		return TRUE;
-	case WM_COMMAND:
-
-	case WM_CLOSE:
-		EndDialog(hDlg, 0); // 다이얼로그 상자 닫기
-		return TRUE;
-	}
-
-	return FALSE;
 }
 
 // 소켓 정보 얻기
