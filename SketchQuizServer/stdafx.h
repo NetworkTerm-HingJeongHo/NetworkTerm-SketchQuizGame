@@ -4,6 +4,6 @@
 #include "PrjServer.h"
 
 // ==== 지안 ====//
-#include "Login.h" //로그인하쟈
+#include "Login.h" // 로그인하자잉
 
 // ============ //
