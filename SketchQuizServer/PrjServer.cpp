@@ -223,6 +223,11 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
 			printf("[받은 데이터] %s\n", ptr->buf);
 			// ======================//
+			// 
+			// ======== 연경 =======
+			addMessage(ptr->buf);
+			// ====================
+
 			if (retval == SOCKET_ERROR) {
 				err_display("recv()");
 				RemoveSocketInfo(wParam);
@@ -245,6 +250,9 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				err_display("recvfrom()");
 				return;
 			}
+			// ======== 연경 =======
+			addMessage(buf);
+			// ====================
 
 			// UDP로 접속한 클라 정보 수집
 			AddSocketInfoUDP(clientaddr);
@@ -260,6 +268,9 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				err_display("recvfrom()");
 				return;
 			}
+			// ======== 연경 =======
+			addMessage(buf);
+			// ====================
 
 			// UDP로 접속한 클라 정보 수집
 			AddSocketInfoUDP(clientaddr);
@@ -442,10 +453,10 @@ void RemoveSocketInfo(SOCKET sock)
 
 
 void addMessage(char* message) {
-	//if ((g_msgQueue.tail + 1) % BUFSIZE == g_msgQueue.head) { //큐가 꽉찬 경우: 
-	//	g_msgQueue.head = (g_msgQueue.head + 1) % BUFSIZE; //마지막 요소를 하나 지우고 공간 하나를 확보한다.
-	//}
-	//g_msgQueue.queue[g_msgQueue.tail] = message;
-	//g_msgQueue.tail = (g_msgQueue.tail + 1) % BUFSIZE;
+	if ((g_msgQueue.tail + 1) % BUFSIZE == g_msgQueue.head) { //큐가 꽉찬 경우: 
+		g_msgQueue.head = (g_msgQueue.head + 1) % BUFSIZE; //마지막 요소를 하나 지우고 공간 하나를 확보한다.
+	}
+	strcpy(g_msgQueue.queue[g_msgQueue.tail], message);
+	g_msgQueue.tail = (g_msgQueue.tail + 1) % BUFSIZE;
 
 }

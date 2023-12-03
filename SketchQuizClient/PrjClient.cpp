@@ -314,8 +314,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
 			WaitForSingleObject(g_hReadEvent, INFINITE);
 			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
-			g_chatmsg.type = TYPE_NOTY;
-			snprintf(g_chatmsg.msg, sizeof(g_chatmsg), "[%s] 님이 입장하였습니다.", NICKNAME_CHAR);
+			isMessageQueue = TRUE;
+
 			SetEvent(g_hWriteEvent);
 
 
@@ -1127,7 +1127,12 @@ DWORD WINAPI ReadThread(LPVOID arg)
 		//}
 		// 
 
+		if (isMessageQueue == TRUE) {
+			retval = recvn(g_sock, (char*)&g_msgQueue, BUFSIZE, 0, serveraddr, g_isUDP);
+			isMessageQueue = FALSE;
+		}
 		retval = recvn(g_sock, (char*)&comm_msg, BUFSIZE, 0, serveraddr, g_isUDP);
+
 		if (retval == 0 || retval == SOCKET_ERROR) {
 			err_display("recv()");
 			break;
