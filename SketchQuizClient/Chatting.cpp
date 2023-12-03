@@ -43,3 +43,12 @@ void MySendFile(char* senderName, char* reciverName, char* msg) {
 
 	fclose(fp);
 }
+
+void printMessageQueue(MESSAGEQUEUE msgQueue) {
+	int idx = msgQueue.head;
+	for (int i = 0; i < ((msgQueue.tail - msgQueue.head + BUFSIZE) % BUFSIZE); i++) {
+		DisplayText(msgQueue.queue[idx]);
+		DisplayText("\r\n");
+		idx = (idx + 1) % BUFSIZE;
+	}
+}

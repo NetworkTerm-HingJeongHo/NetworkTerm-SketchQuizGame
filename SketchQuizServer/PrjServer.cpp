@@ -215,7 +215,10 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			//for (int i = 0; i < nTotalSockets; i++) {
 			//	SOCKETINFO* ptr = SocketInfoArray[i];					
 			SOCKETINFO* ptr2 = SocketInfoArray[nTotalSockets-1];
+
 			retval = send(ptr2->sock, (char*)&g_msgQueue, BUFSIZE, 0);
+			printf("\nMessage Queue send - TCP\n");
+
 			if (retval == SOCKET_ERROR) {
 				err_display("send()");
 			}
@@ -226,6 +229,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets-1];
 			// 데이터 보내기
 			retval = sendto(socket_UDP_groupA, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+			printf("\nMessage Queue send - UDP A\n");
 			if (retval == SOCKET_ERROR) {
 				err_display("sendto()");
 				return;
@@ -236,6 +240,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets - 1];
 			// 데이터 보내기
 			retval = sendto(socket_UDP_groupB, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+			printf("\nMessage Queue send - UDP B\n");
 			if (retval == SOCKET_ERROR) {
 				err_display("sendto()");
 				return;
