@@ -221,12 +221,23 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			
 		}
-		// UDP socket
-		else
-		{
+		// UDP socket - Group A
+		else if (wParam == socket_UDP_groupA) {
 			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets - 1];
 			// 데이터 보내기
-			retval = sendto(socket_UDP, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+			retval = sendto(socket_UDP_groupA, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+			printf("\nMessage Queue send - UDP A\n");
+			if (retval == SOCKET_ERROR) {
+				err_display("sendto()");
+				return;
+			}
+		}
+		// UDP socket - Group B
+		else if (wParam == socket_UDP_groupB) {
+			SOCKADDR_IN clientUDP = UDPSocketInfoArray[nTotalSockets - 1];
+			// 데이터 보내기
+			retval = sendto(socket_UDP_groupB, (char*)&g_msgQueue, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+			printf("\nMessage Queue send - UDP B\n");
 			if (retval == SOCKET_ERROR) {
 				err_display("sendto()");
 				return;
