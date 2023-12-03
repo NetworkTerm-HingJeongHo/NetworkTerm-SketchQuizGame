@@ -311,13 +311,17 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// ========= 연경 =========
 			gameStart(g_hTimerStatus, g_hWordStatus);
 
+			WaitForSingleObject(g_hReadEvent, INFINITE);
+			isMessageQueue = TRUE;
+			SetEvent(g_hReadEvent);
+
 			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
 			WaitForSingleObject(g_hReadEvent, INFINITE);
 			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
-			isMessageQueue = TRUE;
-
+			g_chatmsg.type = TYPE_NOTY;
+			strcpy(g_chatmsg.msg, NICKNAME_CHAR);
+			strcat(g_chatmsg.msg, "님이 입장하였습니다!");
 			SetEvent(g_hWriteEvent);
-
 
 			// ========= 정호 =========
 			EnableWindow(g_hFigureSelect, TRUE);
@@ -662,7 +666,7 @@ LRESULT CALLBACK HomeWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 
 		CreateWindow(_T("BUTTON"), _T("공지 전송"), WS_VISIBLE | WS_CHILD, 1042, 185, 174, 54, hwnd, (HMENU)ID_NOTICE_BUTTON, NULL, NULL); // 공지 전송
 
-		CreateWindow(_T("BUTTON"), _T("TCP 채널 입장"), WS_VISIBLE | WS_CHILD, 300, 200, 640, 100, hwnd, (HMENU)ID_CHANNEL_A_BUTTON, NULL, NULL); // 채널 A 입장
+		CreateWindow(_T("BUTTON"), _T("TCP 채널 	"), WS_VISIBLE | WS_CHILD, 300, 200, 640, 100, hwnd, (HMENU)ID_CHANNEL_A_BUTTON, NULL, NULL); // 채널 A 입장
 		CreateWindow(_T("BUTTON"), _T("UDP 채널1 입장"), WS_VISIBLE | WS_CHILD, 300, 350, 640, 100, hwnd, (HMENU)ID_CHANNEL_B_BUTTON, NULL, NULL); // 채널 B 입장
 
 		//CreateWindow(L"BUTTON", L"방만들기", WS_VISIBLE | WS_CHILD, 282, 600, 320, 67, hwnd, (HMENU)ID_BACKHOME_BUTTON, NULL, NULL); // 방 만들기
@@ -1130,27 +1134,28 @@ DWORD WINAPI ReadThread(LPVOID arg)
 		if (isMessageQueue == TRUE) {
 			retval = recvn(g_sock, (char*)&g_msgQueue, BUFSIZE, 0, serveraddr, g_isUDP);
 			isMessageQueue = FALSE;
+			DisplayText("%s\r\n", "이전 대화 내용을 표시합니다(임시)");
 		}
-		retval = recvn(g_sock, (char*)&comm_msg, BUFSIZE, 0, serveraddr, g_isUDP);
+		else {
+			retval = recvn(g_sock, (char*)&comm_msg, BUFSIZE, 0, serveraddr, g_isUDP);
 
-		if (retval == 0 || retval == SOCKET_ERROR) {
-			err_display("recv()");
-			break;
-		}
-		else if (retval == 0)
-		{
-			break;
-		}
+			if (retval == 0 || retval == SOCKET_ERROR) {
+				err_display("recv()");
+				break;
+			}
+			else if (retval == 0)
+			{
+				break;
+			}
 
-		switch (comm_msg.type)
-		{
-		// ============ 연경 ==========
-		case TYPE_CHAT:
-			if (comm_msg.type == TYPE_CHAT) {
+			switch (comm_msg.type)
+			{
+				// ============ 연경 ==========
+			case TYPE_CHAT:
 				chat_msg = (CHAT_MSG*)&comm_msg;
 				sscanf(chat_msg->msg, "{%[^}]%*s%s", senderName, sendMsg);
 
- 				if (strncmp(sendMsg, "/w ", 3) == 0) {
+				if (strncmp(sendMsg, "/w ", 3) == 0) {
 					sscanf(sendMsg, "%s %s %s", tmp, sender, reciever);
 					if (strcmp(reciever, NICKNAME_CHAR) == 0) {
 						MySendFile(sender, reciever, chat_msg->msg);
@@ -1167,38 +1172,39 @@ DWORD WINAPI ReadThread(LPVOID arg)
 					DisplayText("[%s] 정답입니다!\r\n", word);
 					newRound();
 				}
-			}
-			break;
-		case TYPE_NOTY:
-			chat_msg = (CHAT_MSG*)&comm_msg;
-			DisplayText("%s\r\n", chat_msg->msg);
-			break;
-		case TYPE_DRAWLINE:
-			drawline_msg = (DRAWLINE_MSG*)&comm_msg;
-			// ============ 지윤 ============
-			g_serverDrawDetailInformation.width = drawline_msg->width;
-			// ==============================
-			g_serverDrawDetailInformation.color = drawline_msg->color;
-			SendMessage(g_hDrawWnd, WM_DRAWLINE,
-				MAKEWPARAM(drawline_msg->x0, drawline_msg->y0),
-				MAKELPARAM(drawline_msg->x1, drawline_msg->y1));
-			break;
-		// ======== 정호 ==========
-		case TYPE_DRAWELLIPSE:
-			drawEllipse_msg = (DRAWELLIPSE_MSG*)&comm_msg;
-			g_serverDrawDetailInformation.width = drawEllipse_msg->width;
-			g_serverDrawDetailInformation.color = drawEllipse_msg->color;
-			SendMessage(g_hDrawWnd, WM_DRAWELLIPSE,
-				MAKEWPARAM(drawEllipse_msg->x0, drawEllipse_msg->y0),
-				MAKELPARAM(drawEllipse_msg->x1, drawEllipse_msg->y1));
-			break;
-		case TYPE_ERASEPIC:
-			erasepic_msg = (ERASEPIC_MSG*)&comm_msg;
-			SendMessage(g_hDrawWnd, WM_ERASEPIC, 0, 0);
-			break;
 
-		default:
-			break;
+				break;
+			case TYPE_NOTY:
+				chat_msg = (CHAT_MSG*)&comm_msg;
+				DisplayText("%s\r\n", chat_msg->msg);
+				break;
+			case TYPE_DRAWLINE:
+				drawline_msg = (DRAWLINE_MSG*)&comm_msg;
+				// ============ 지윤 ============
+				g_serverDrawDetailInformation.width = drawline_msg->width;
+				// ==============================
+				g_serverDrawDetailInformation.color = drawline_msg->color;
+				SendMessage(g_hDrawWnd, WM_DRAWLINE,
+					MAKEWPARAM(drawline_msg->x0, drawline_msg->y0),
+					MAKELPARAM(drawline_msg->x1, drawline_msg->y1));
+				break;
+				// ======== 정호 ==========
+			case TYPE_DRAWELLIPSE:
+				drawEllipse_msg = (DRAWELLIPSE_MSG*)&comm_msg;
+				g_serverDrawDetailInformation.width = drawEllipse_msg->width;
+				g_serverDrawDetailInformation.color = drawEllipse_msg->color;
+				SendMessage(g_hDrawWnd, WM_DRAWELLIPSE,
+					MAKEWPARAM(drawEllipse_msg->x0, drawEllipse_msg->y0),
+					MAKELPARAM(drawEllipse_msg->x1, drawEllipse_msg->y1));
+				break;
+			case TYPE_ERASEPIC:
+				erasepic_msg = (ERASEPIC_MSG*)&comm_msg;
+				SendMessage(g_hDrawWnd, WM_ERASEPIC, 0, 0);
+				break;
+
+			default:
+				break;
+			}
 		}
 
 
