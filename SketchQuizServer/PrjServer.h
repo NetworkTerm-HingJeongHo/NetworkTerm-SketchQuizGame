@@ -4,6 +4,11 @@
 #define SERVERIP4_CHAR_UDP2 "235.7.8.19" // 그룹 1
 #define SERVERPORT 9000
 #define BUFSIZE    256
+
+//==== 지안 ===== //
+#define TYPE_ID		1003				// 메시지 타입: id (지안)
+// ============== //
+
 // ==== 정호 ====
 #define WM_SOCKET (WM_USER+1)
 
@@ -27,6 +32,15 @@ typedef struct _MESSAGEQUEUE {
 } MESSAGEQUEUE;
 
 // ====================
+
+// ======== 지안 ======== //
+// 로그인할때 ID 형식
+typedef struct ID
+{
+	int  type;		// 로그인할때 ID 형식
+	char msg[BUFSIZE];	// id 내용
+} ID_MSG;
+// ====================== //
 
 
 // ========== 지윤 ==========
