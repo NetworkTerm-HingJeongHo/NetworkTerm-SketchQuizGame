@@ -3,7 +3,7 @@
 
 void CreateRankDlg(HWND hWnd)
 {
-	g_hRankDlg = CreateDialog(g_hInstance, MAKEINTRESOURCE(IDD_DIALOG2), hWnd, DlgRanking);
+	g_hRankDlg = CreateDialog(g_hInstance, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, DlgRanking);
 	ShowWindow(g_hRankDlg, SW_SHOW);
 	//g_bDialogVisible = true;
 }
