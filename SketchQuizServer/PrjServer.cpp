@@ -217,21 +217,8 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		}
 
-		// ========== 연경 =========
-		// TCP socket
-		if (wParam != socket_UDP) {
-			//for (int i = 0; i < nTotalSockets; i++) {
-			//	SOCKETINFO* ptr = SocketInfoArray[i];					
-			SOCKETINFO* ptr2 = SocketInfoArray[nTotalSockets-1];
 
-			retval = send(ptr2->sock, (char*)&g_msgQueue, BUFSIZE, 0);
-			printf("\nMessage Queue send - TCP\n");
 
-			if (retval == SOCKET_ERROR) {
-				err_display("send()");
-			}
-			
-		}
 
 		break;
 	case FD_READ:
@@ -432,4 +419,9 @@ void addMessage(char* message) {
 	strcpy(g_msgQueue.queue[g_msgQueue.tail], message);
 	g_msgQueue.tail = (g_msgQueue.tail + 1) % BUFSIZE;
 
+}
+
+// 서버에서 클라이언트에 
+DWORD WINAPI messageQueueThread(LPVOID arg) {
+	return 0;
 }
