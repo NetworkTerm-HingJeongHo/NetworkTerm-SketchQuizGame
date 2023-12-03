@@ -15,16 +15,14 @@
 #define IDC_SENDFILE                    1010
 #define IDC_DUMMY                       1011
 
-// =========== 지윤 ===========
 #define IDC_PENCOLOR                    3100
 #define IDC_LINEWIDTH                   3101
 #define IDC_DRAWINGTEXTID               3102
 #define IDC_DRAWINGTEXT                 3103
+#define IDC_EXIT_BUTTON                 3104
 
-// =========== 정호 ===========
 #define IDC_FIGURE                      4100
 
-// =========== 연경 ===========
 #define IDC_ANNOUNCE                    5010
 #define IDD_DIALOG2                     5101
 #define IDC_EDIT1ST                     5102
@@ -47,7 +45,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        104
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1031
+#define _APS_NEXT_CONTROL_VALUE         1033
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
