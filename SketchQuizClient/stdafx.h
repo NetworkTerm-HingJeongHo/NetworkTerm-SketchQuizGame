@@ -48,6 +48,8 @@ static HWND			 g_hMainWindow;   // 처음 윈도우창 핸들
 static HWND			 g_hDialog;       // 그림판 다이어로그 핸들
 static HWND			 g_hBtnPenColor;  // [색상 변경] 버튼
 static HWND			 g_hLineWidth;    // 선 굵기 콤보박스
+static HWND			 g_hDrawingTextId;   // 그림 그리는 사람 아이디
+static HWND			 g_hDrawingText;     // 그림 그리는 사람 안내 문구
 
 // ============= 연경 =============
 // 채팅 관련 변수
@@ -70,6 +72,7 @@ static int countdown = 30;
 static const _TCHAR* quizWord[4] = { _T("apple"), _T("바나나"), _T("포도"),_T("오렌지") };   // 제시어 배열
 static BOOL isGameOver = FALSE;
 static BOOL isOwner = FALSE;  // 문제를 내는 클라이언트일 경우 isOwner는 TRUE이다. 문제를 맞추는 사람인 경우 FALSE.
+
 
 
 static char NICKNAME_CHAR[256];

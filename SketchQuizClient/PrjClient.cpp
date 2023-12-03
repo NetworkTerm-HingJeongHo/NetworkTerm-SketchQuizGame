@@ -158,12 +158,14 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// ========= 연경 =========
 	static HWND hTimer;    // 타이머 표시 
 	static HWND hWord;     // 제시어 표시
-	int tmp;
+	static HWND hBtnGameStart; // 게임 시작 버튼
 
 	// ========= 지윤 =========
 	static HWND hBtnPenColor;
 	static HWND hLineWidth;
 	static HWND hDlgChannel;
+	static HWND hDrawingTextId;
+	static HWND hDrawingText;
 
 	// ========= 정호 =========
 	static HWND hFigureSelect;	// 그릴 도형 선택
@@ -187,12 +189,15 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		hBtnErasePic = GetDlgItem(hDlg, IDC_ERASEPIC);
 		g_hBtnErasePic = hBtnErasePic; // 전역 변수에 저장
 		hStaticDummy = GetDlgItem(hDlg, IDC_DUMMY);
-
+		
 
 
 		// ========= 연경 =========
 		g_hTimerStatus = GetDlgItem(hDlg, IDC_EDIT_TIMER);  // 타이머 표시하는 EditText 부분 
 		g_hWordStatus = GetDlgItem(hDlg, IDC_EDIT_WORD);    // 제시어 표시하는 EditText 부분
+		hBtnGameStart = GetDlgItem(hDlg, IDC_GAMESTART);
+		EnableWindow(hBtnGameStart, FALSE);
+
 		g_hDrawDlg = hDlg;
 		WideCharToMultiByte(CP_ACP, 0, ID_NICKNAME, 256, NICKNAME_CHAR, 256, NULL, NULL); //_TCHAR 형 문자열을 char* 형 문자열로 변경
 
@@ -202,6 +207,12 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		hLineWidth = GetDlgItem(hDlg, IDC_LINEWIDTH);
 		g_hLineWidth = hLineWidth; // 전역 변수에 저장
+
+		hDrawingTextId = GetDlgItem(hDlg, IDC_DRAWINGTEXTID);
+		g_hDrawingTextId = hDrawingTextId; // 전역 변수에 저장
+
+		hDrawingText = GetDlgItem(hDlg, IDC_DRAWINGTEXT);
+		g_hDrawingText = hDrawingText; // 전역 변수에 저장
 
 		// ========= 정호 =========
 		// 그릴 도형 선택하는 핸들러를 얻어서 전역 변수에 저장
@@ -220,6 +231,8 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		// ========= 지윤 =========
 		EnableWindow(g_hBtnPenColor, FALSE);
 		EnableWindow(g_hLineWidth, FALSE);
+		ShowWindow(g_hDrawingTextId, SW_HIDE);
+		ShowWindow(g_hDrawingText, SW_HIDE);
 
 		AddLineWidthOption(hDlg);
 
@@ -304,10 +317,13 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// ========= 지윤 =========
 			EnableWindow(g_hBtnPenColor, TRUE);
 			EnableWindow(g_hLineWidth, TRUE);
+			ShowWindow(g_hDrawingTextId, SW_SHOW);
+			ShowWindow(g_hDrawingText, SW_SHOW);
+
 			DisplayDrawingUserID(hDlg, userIDs);
 
 			// ========= 연경 =========
-			gameStart(g_hTimerStatus, g_hWordStatus);
+			EnableWindow(hBtnGameStart, TRUE);
 
 			//WaitForSingleObject(g_hReadEvent, INFINITE);
 			//SetEvent(g_hWriteEvent);
@@ -399,6 +415,15 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EndDialog(hDlg, 0);
 			return TRUE;
 		}
+		case IDC_GAMESTART:
+			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
+			WaitForSingleObject(g_hReadEvent, INFINITE);
+			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
+			g_chatmsg.type = TYPE_NOTY;
+			strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
+			SetEvent(g_hWriteEvent);
+			gameStart(g_hTimerStatus, g_hWordStatus);
+			break;
 	}
 	return FALSE;
 }
