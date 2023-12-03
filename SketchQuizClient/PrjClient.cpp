@@ -158,7 +158,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// ========= 연경 =========
 	static HWND hTimer;    // 타이머 표시 
 	static HWND hWord;     // 제시어 표시
-
+	int tmp;
 
 	// ========= 지윤 =========
 	static HWND hBtnPenColor;
@@ -309,13 +309,15 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// ========= 연경 =========
 			gameStart(g_hTimerStatus, g_hWordStatus);
 
+			//WaitForSingleObject(g_hReadEvent, INFINITE);
+			//SetEvent(g_hWriteEvent);
+			isMessageQueue = TRUE;
 			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
 			WaitForSingleObject(g_hReadEvent, INFINITE);
 			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
-			isMessageQueue = TRUE;
-
+			g_chatmsg.type = TYPE_NOTY;
+			sprintf(g_chatmsg.msg, "[%s] 님이 입장하였습니다!", NICKNAME_CHAR);
 			SetEvent(g_hWriteEvent);
-
 
 			// ========= 정호 =========
 			EnableWindow(g_hFigureSelect, TRUE);
@@ -669,7 +671,7 @@ LRESULT CALLBACK HomeWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 
 		CreateWindow(_T("BUTTON"), _T("공지 전송"), WS_VISIBLE | WS_CHILD, 1042, 185, 174, 54, hwnd, (HMENU)ID_NOTICE_BUTTON, NULL, NULL); // 공지 전송
 
-		CreateWindow(_T("BUTTON"), _T("TCP 채널 입장"), WS_VISIBLE | WS_CHILD, 300, 200, 640, 100, hwnd, (HMENU)ID_CHANNEL_A_BUTTON, NULL, NULL); // 채널 A 입장
+		CreateWindow(_T("BUTTON"), _T("TCP 채널 	"), WS_VISIBLE | WS_CHILD, 300, 200, 640, 100, hwnd, (HMENU)ID_CHANNEL_A_BUTTON, NULL, NULL); // 채널 A 입장
 		CreateWindow(_T("BUTTON"), _T("UDP 채널1 입장"), WS_VISIBLE | WS_CHILD, 300, 350, 640, 100, hwnd, (HMENU)ID_CHANNEL_B_BUTTON, NULL, NULL); // 채널 B 입장
 
 		//CreateWindow(L"BUTTON", L"방만들기", WS_VISIBLE | WS_CHILD, 282, 600, 320, 67, hwnd, (HMENU)ID_BACKHOME_BUTTON, NULL, NULL); // 방 만들기
@@ -1118,7 +1120,19 @@ DWORD WINAPI ReadThread(LPVOID arg)
 
 		if (isMessageQueue == TRUE) {
 			retval = recvn(g_sock, (char*)&g_msgQueue, BUFSIZE, 0, serveraddr, g_isUDP);
+			if (retval == 0 || retval == SOCKET_ERROR) {
+				err_display("recv()");
+				break;
+			}
+			DisplayText("------\r\n");
+			int idx = g_msgQueue.head;
+			for (int i = 0; i < ((g_msgQueue.tail - g_msgQueue.head + BUFSIZE) % BUFSIZE); i++) {
+				DisplayText(g_msgQueue.queue[idx]);
+				DisplayText("\r\n");
+				idx = (idx + 1) % BUFSIZE;
+			}
 			isMessageQueue = FALSE;
+			continue;
 		}
 		retval = recvn(g_sock, (char*)&comm_msg, BUFSIZE, 0, serveraddr, g_isUDP);
 
@@ -1133,30 +1147,29 @@ DWORD WINAPI ReadThread(LPVOID arg)
 
 		switch (comm_msg.type)
 		{
-		// ============ 연경 ==========
+			// ============ 연경 ==========
 		case TYPE_CHAT:
-			if (comm_msg.type == TYPE_CHAT) {
-				chat_msg = (CHAT_MSG*)&comm_msg;
-				sscanf(chat_msg->msg, "{%[^}]%*s%s", senderName, sendMsg);
+			chat_msg = (CHAT_MSG*)&comm_msg;
+			sscanf(chat_msg->msg, "{%[^}]%*s%s", senderName, sendMsg);
 
- 				if (strncmp(sendMsg, "/w ", 3) == 0) {
-					sscanf(sendMsg, "%s %s %s", tmp, sender, reciever);
-					if (strcmp(reciever, NICKNAME_CHAR) == 0) {
-						MySendFile(sender, reciever, chat_msg->msg);
-						DisplayText("%s\r\n", chat_msg->msg);
-					}
-				}
-				else {
+			if (strncmp(sendMsg, "/w ", 3) == 0) {
+				sscanf(sendMsg, "%s %s %s", tmp, sender, reciever);
+				if (strcmp(reciever, NICKNAME_CHAR) == 0) {
+					MySendFile(sender, reciever, chat_msg->msg);
 					DisplayText("%s\r\n", chat_msg->msg);
 				}
-
-				WideCharToMultiByte(CP_ACP, 0, quizWord[roundNum], 10, word, 10, NULL, NULL);
-				if (strcmp(sendMsg, word) == 0) {  // 제시어를 맞춘 경우: 정답임을 출력하고 새 라운드 시작
-
-					DisplayText("[%s] 정답입니다!\r\n", word);
-					newRound();
-				}
 			}
+			else {
+				DisplayText("%s\r\n", chat_msg->msg);
+			}
+
+			WideCharToMultiByte(CP_ACP, 0, quizWord[roundNum], 10, word, 10, NULL, NULL);
+			if (strcmp(sendMsg, word) == 0) {  // 제시어를 맞춘 경우: 정답임을 출력하고 새 라운드 시작
+
+				DisplayText("[%s] 정답입니다!\r\n", word);
+				newRound();
+			}
+
 			break;
 		case TYPE_NOTY:
 			chat_msg = (CHAT_MSG*)&comm_msg;
@@ -1172,7 +1185,7 @@ DWORD WINAPI ReadThread(LPVOID arg)
 				MAKEWPARAM(drawline_msg->x0, drawline_msg->y0),
 				MAKELPARAM(drawline_msg->x1, drawline_msg->y1));
 			break;
-		// ======== 정호 ==========
+			// ======== 정호 ==========
 		case TYPE_DRAWELLIPSE:
 			drawEllipse_msg = (DRAWELLIPSE_MSG*)&comm_msg;
 			g_serverDrawDetailInformation.width = drawEllipse_msg->width;
@@ -1189,6 +1202,7 @@ DWORD WINAPI ReadThread(LPVOID arg)
 		default:
 			break;
 		}
+		
 
 
 	}
@@ -1205,6 +1219,12 @@ DWORD WINAPI WriteThread(LPVOID arg)
 	while (1) {
 		// 쓰기 완료 기다리기
 		WaitForSingleObject(g_hWriteEvent, INFINITE);
+		//if (isMessageQueue == TRUE) {
+		//	isMessageQueue = FALSE;
+		//	DisplayText("이전 대화 내용 표시\r\n");
+		//	SetEvent(g_hReadEvent);
+		//	continue;
+		//}
 		// 문자열 길이가 0이면 보내지 않음
 		if (strlen(g_chatmsg.msg) == 0) {
 			// [메시지 전송] 버튼 활성화
