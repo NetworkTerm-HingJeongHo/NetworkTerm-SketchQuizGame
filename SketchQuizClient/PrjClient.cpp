@@ -242,67 +242,72 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//
 
 		
-		// 윈도우 클래스 등록
-		WNDCLASS wndclass;
-		wndclass.style = CS_HREDRAW | CS_VREDRAW;
-		wndclass.lpfnWndProc = ChildWndProc;
-		wndclass.cbClsExtra = 0;
-		wndclass.cbWndExtra = 0;
-		wndclass.hInstance = g_hInstance;
-		wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-		wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-		wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-		wndclass.lpszMenuName = _T("MyWndClass");
-		wndclass.lpszClassName = _T("MyWndClass");
-		if (!RegisterClass(&wndclass)) exit(1);
 
-		// 자식 윈도우 생성
-		RECT rect; GetWindowRect(hStaticDummy, &rect);
-		POINT pt; pt.x = rect.left; pt.y = rect.top;
-		ScreenToClient(hDlg, &pt);
-		g_hDrawWnd = CreateWindow(_T("MyWndClass"), _T(""), WS_CHILD,
-			pt.x, pt.y, rect.right - rect.left, rect.bottom - rect.top,
-			hDlg, (HMENU)NULL, g_hInstance, NULL);
-		if (g_hDrawWnd == NULL) exit(1);
-		ShowWindow(g_hDrawWnd, SW_SHOW);
-		UpdateWindow(g_hDrawWnd);
+
+		// ========= 
+		// 컨트롤 상태 얻기
+		GetDlgItemTextA(hDlg, IDC_IPADDR, g_ipaddr, sizeof(g_ipaddr));
+		g_port = GetDlgItemInt(hDlg, IDC_PORT, NULL, TRUE);
+		//g_isIPv6 = SendMessage(hChkIsIPv6, BM_GETCHECK, 0, 0);
+		//g_isUDP = SendMessage(hChkIsUDP, BM_GETCHECK, 0, 0);
+
+		//=============  지안 ===============//
+		// 채널에 따라 UDP, TCP 체크 여부 바꾸기
+		switch (channel) {
+		case CHANNEL_TCP: //TCP면 UDP 채널 falsem
+			g_isUDP = false;
+			break;
+		case CHANNEL_UDP1: //UDP면 udp 버튼 true
+			g_isUDP = true;
+			break;
+		case CHANNEL_UDP2: //UDP면 udp 버튼 true
+			g_isUDP = true;
+		default:
+			break;
+		}
+		//=====================================//
+
+		// 소켓 통신 스레드 시작
+		g_hClientThread = CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
+		if (g_hClientThread == NULL) exit(0);
+		// 서버 접속 성공 기다림
+		while (g_bCommStarted == false);
+
+		EnableWindow(hBtnGameStart, TRUE);
+		WaitForSingleObject(g_hReadEvent, INFINITE);
+		// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
+		g_chatmsg.type = TYPE_NOTY;
+		sprintf(g_chatmsg.msg, "[%s] 님이 입장하였습니다!", NICKNAME_CHAR);
+		SetEvent(g_hWriteEvent);
+
 		return TRUE;
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
-		case IDC_ISIPV6:
-			g_isIPv6 = SendMessage(hChkIsIPv6, BM_GETCHECK, 0, 0);
-			if (g_isIPv6 == false)
-				SetDlgItemText(hDlg, IDC_IPADDR, SERVERIP4);
-			else
-				SetDlgItemText(hDlg, IDC_IPADDR, SERVERIP6);
-			return TRUE;
-		case IDC_CONNECT:
-			// 컨트롤 상태 얻기
-			GetDlgItemTextA(hDlg, IDC_IPADDR, g_ipaddr, sizeof(g_ipaddr));
-			g_port = GetDlgItemInt(hDlg, IDC_PORT, NULL, TRUE);
-			g_isIPv6 = SendMessage(hChkIsIPv6, BM_GETCHECK, 0, 0);
-			g_isUDP = SendMessage(hChkIsUDP, BM_GETCHECK, 0, 0);
-			//=============  지안 ===============//
-			// 채널에 따라 UDP, TCP 체크 여부 바꾸기
-			switch (channel) {
-				case CHANNEL_TCP: //TCP면 UDP 채널 falsem
-					g_isUDP = false;
-					break;
-				case CHANNEL_UDP1: //UDP면 udp 버튼 true
-					g_isUDP = true;
-					break;
-				case CHANNEL_UDP2: //UDP면 udp 버튼 true
-					g_isUDP = true;
-				default:
-					break;
-			}
-			//=====================================//
+		case IDC_GAMESTART:
+			// 윈도우 클래스 등록
+			WNDCLASS wndclass;
+			wndclass.style = CS_HREDRAW | CS_VREDRAW;
+			wndclass.lpfnWndProc = ChildWndProc;
+			wndclass.cbClsExtra = 0;
+			wndclass.cbWndExtra = 0;
+			wndclass.hInstance = g_hInstance;
+			wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+			wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+			wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+			wndclass.lpszMenuName = _T("MyWndClass");
+			wndclass.lpszClassName = _T("MyWndClass");
+			if (!RegisterClass(&wndclass)) exit(1);
 
-			// 소켓 통신 스레드 시작
-			g_hClientThread = CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
-			if (g_hClientThread == NULL) exit(0);
-			// 서버 접속 성공 기다림
-			while (g_bCommStarted == false);
+			// 자식 윈도우 생성
+			RECT rect; GetWindowRect(hStaticDummy, &rect);
+			POINT pt; pt.x = rect.left; pt.y = rect.top;
+			ScreenToClient(hDlg, &pt);
+			g_hDrawWnd = CreateWindow(_T("MyWndClass"), _T(""), WS_CHILD,
+				pt.x, pt.y, rect.right - rect.left, rect.bottom - rect.top,
+				hDlg, (HMENU)NULL, g_hInstance, NULL);
+			if (g_hDrawWnd == NULL) exit(1);
+			ShowWindow(g_hDrawWnd, SW_SHOW);
+			UpdateWindow(g_hDrawWnd);
 			// 컨트롤 상태 변경
 			EnableWindow(hChkIsIPv6, FALSE);
 			EnableWindow(hEditIPaddr, FALSE);
@@ -327,14 +332,17 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			//WaitForSingleObject(g_hReadEvent, INFINITE);
 			//SetEvent(g_hWriteEvent);
-			isMessageQueue = TRUE;
+			//isMessageQueue = TRUE;
+			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
+
+			EnableWindow(hBtnGameStart, FALSE);
 			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
 			WaitForSingleObject(g_hReadEvent, INFINITE);
 			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
 			g_chatmsg.type = TYPE_NOTY;
-			sprintf(g_chatmsg.msg, "[%s] 님이 입장하였습니다!", NICKNAME_CHAR);
+			strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
 			SetEvent(g_hWriteEvent);
-
+			//	gameStart(g_hTimerStatus, g_hWordStatus);
 			// ========= 정호 =========
 			EnableWindow(g_hFigureSelect, TRUE);
 			//
@@ -415,16 +423,16 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			EndDialog(hDlg, 0);
 			return TRUE;
 
-		case IDC_GAMESTART:
-			EnableWindow(hBtnGameStart, FALSE);
-			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
-			WaitForSingleObject(g_hReadEvent, INFINITE);
-			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
-			g_chatmsg.type = TYPE_NOTY;
-			strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
-			SetEvent(g_hWriteEvent);
-		//	gameStart(g_hTimerStatus, g_hWordStatus);
-			break;
+		//case IDC_GAMESTART:
+		//	EnableWindow(hBtnGameStart, FALSE);
+		//	// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
+		//	WaitForSingleObject(g_hReadEvent, INFINITE);
+		//	// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
+		//	g_chatmsg.type = TYPE_NOTY;
+		//	strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
+		//	SetEvent(g_hWriteEvent);
+		////	gameStart(g_hTimerStatus, g_hWordStatus);
+		//	break;
 		}
 	}
 	return FALSE;
