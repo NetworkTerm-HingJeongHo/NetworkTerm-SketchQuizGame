@@ -79,3 +79,5 @@ DWORD WINAPI WriteThread(LPVOID arg);
 
 // 에디트 컨트롤 출력 함수
 void DisplayText(const char *fmt, ...);
+// 게임 시작 버튼 onClick()함수
+void btnGameStart_click();
