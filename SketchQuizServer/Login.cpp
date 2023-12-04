@@ -23,6 +23,9 @@ void setIDInSocket(char cilentID[], SOCKETINFO* ptr) {
 		err_display("setIDInSocket");
 	}
 
+	// char형 닉네임도 등록하는 부분
+	strcpy(ptr->id_nickname_char, cilentID);
+
 }
 
 //ID_MSG* a;
