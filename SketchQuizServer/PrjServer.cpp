@@ -246,7 +246,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					ID_MSG* id_msg;
 					id_msg = (ID_MSG*)&(ptr->buf); // ID로 형변환
 					printf("[TYPE_ID 받은 데이터] %s\n", id_msg->msg);
-					strcpy((char*)ptr->id_nickname, id_msg->msg);
+					//strcpy((char*)ptr->id_nickname, id_msg->msg);
 					break;
 				default:
 					break;
