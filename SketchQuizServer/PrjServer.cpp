@@ -202,10 +202,6 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// 접속한 클라이언트 정보 출력
 			printf("\n[TCP/IPv4 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", 
 				inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
-			// =========== 지윤 ============
-			//AddClientToListView(ntohs(clientaddr.sin_port));
-			//DisplayClientList();
-			// =============================
 			
 			// 소켓 정보 추가
 			AddSocketInfoTCP(client_sock);
@@ -253,7 +249,6 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					// =============================
 
 					break;
-				// ===== ���� ====
 				case TYPE_CHAT:
 					fd = fopen("chatting_log.txt", "a");
 					CHAT_MSG* chat_msg;
