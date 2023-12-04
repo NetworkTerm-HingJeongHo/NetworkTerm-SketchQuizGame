@@ -1,5 +1,13 @@
 #include "stdafx.h"
 
+//// 받은 데이터(char)를 COMM_MSG로 형변환하는 함수 
+//COMM_MSG* charArrayToCommMsg(char charArray[]) {
+//	COMM_MSG* commMsg;
+//	commMsg = (COMM_MSG*)&charArray;
+//
+//	return commMsg;
+//
+//}
 
 // ID 소켓에 등록하는 함수.
 void setIDInSocket(char cilentID[], SOCKETINFO* ptr) {
