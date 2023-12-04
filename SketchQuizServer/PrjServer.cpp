@@ -172,6 +172,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 // 소켓 관련 윈도우 메시지 처리
 void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+
+	FILE* fd;
 	// 데이터 통신에 사용할 변수
 	SOCKETINFO* ptr;
 	SOCKET client_sock;
