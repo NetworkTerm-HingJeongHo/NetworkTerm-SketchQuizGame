@@ -203,8 +203,8 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			printf("\n[TCP/IPv4 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n", 
 				inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
 			// =========== 지윤 ============
-			AddClientToListView(ntohs(clientaddr.sin_port));
-			DisplayClientList();
+			//AddClientToListView(ntohs(clientaddr.sin_port));
+			//DisplayClientList();
 			// =============================
 			
 			// 소켓 정보 추가
@@ -246,10 +246,10 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					printf("[TCP] TYPE_ID, 현재 소켓 port 등록완료 : %d\n", ptr->sin_port);
 					printf("[TCP] TYPE_ID, 현재 소켓 주소(char) : %s\n", inet_ntoa(ptr->sin_addr));
 					MessageBox(NULL, ptr->id_nickname, _T("현재 소켓 닉네임 등록완료(_TCHAR)"), MB_ICONERROR);
-					//strcpy((char*)ptr->id_nickname, id_msg->msg);
           
 					// =========== 지윤 ============
-
+					AddClientToListView(ptr->sin_port, ptr->id_nickname_char);
+					DisplayClientList();
 					// =============================
 
 					break;
