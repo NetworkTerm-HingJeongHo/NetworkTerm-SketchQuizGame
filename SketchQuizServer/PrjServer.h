@@ -23,7 +23,7 @@ typedef struct _SOCKETINFO
 	int    recvbytes;
 
 	// ===== 연경 ======
-	_TCHAR id_nickname[BUFSIZE]; // 사용자 닉네임
+	char id_nickname[BUFSIZE]; // 사용자 닉네임
 	int    score = 0;       // 게임 플레이 점수
 } SOCKETINFO;
 
