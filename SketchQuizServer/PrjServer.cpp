@@ -247,6 +247,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					AddClientToListView(ptr->sin_port, ptr->id_nickname_char);
 					DisplayClientList();
 					// =============================
+					// 안녕
 
 					break;
 				case TYPE_CHAT:
