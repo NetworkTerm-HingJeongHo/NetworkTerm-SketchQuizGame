@@ -215,13 +215,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				err_display("WSAAsyncSelect()");
 				RemoveSocketInfo(client_sock);
 			}
-
-
 		}
-
-
-
-
 		break;
 	case FD_READ:
 		// TCP socket
