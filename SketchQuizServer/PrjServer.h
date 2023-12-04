@@ -4,6 +4,14 @@
 #define SERVERIP4_CHAR_UDP2 "235.7.8.19" // 그룹 1
 #define SERVERPORT 9000
 #define BUFSIZE    256
+
+//==== 지안 ===== //
+#define SIZE_TOT 256                    // 전송 패킷(헤더 + 데이터) 전체 크기
+#define SIZE_DAT (SIZE_TOT-sizeof(int)) // 헤더를 제외한 데이터 부분만의 크기
+
+#define TYPE_ID		1003				// 메시지 타입: id (지안)
+// ============== //
+
 // ==== 정호 ====
 #define WM_SOCKET (WM_USER+1)
 
@@ -27,6 +35,24 @@ typedef struct _MESSAGEQUEUE {
 } MESSAGEQUEUE;
 
 // ====================
+
+// ======== 지안 ======== //
+// 공통 메시지 형식
+// sizeof(COMM_MSG) == 256
+typedef struct _COMM_MSG
+{
+	int  type;
+	char dummy[SIZE_DAT];
+} COMM_MSG;
+
+// 로그인할때 ID 형식
+// sizeof(DRAWLINE_MSG) == 256
+typedef struct ID
+{
+	int  type;		// 로그인할때 ID 형식
+	char msg[SIZE_DAT];	// id 내용
+} ID_MSG;
+// ====================== //
 
 
 // ========== 지윤 ==========

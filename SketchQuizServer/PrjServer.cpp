@@ -172,6 +172,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 // 소켓 관련 윈도우 메시지 처리
 void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+
+	FILE* fd;
 	// 데이터 통신에 사용할 변수
 	SOCKETINFO* ptr;
 	SOCKET client_sock;
@@ -232,11 +234,27 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			// 고정 데이터 받기
 			retval = recv(ptr->sock, ptr->buf, BUFSIZE, 0);
-			// ======== 지안 ==========//
-			// 
+			// ============================== 지안 ================================//
+			// COMM_MSG 타입으로 형변환 (기보타입) -> 구조체 type을 얻어내기 위함이다.
+			COMM_MSG* comm_msg;
+			comm_msg = (COMM_MSG*)&(ptr->buf);
+			printf("[COMM_MSG type] %d\n", comm_msg->type); //얻은 type 출력
+
+			// Type에 따라 다른 구조체를 가진 switch (직접 형변환 해줘야 함)
+			switch (comm_msg->type) {
+				case (TYPE_ID) :	// TYPE_ID 인 경우 (id 출력)
+					ID_MSG* id_msg;
+					id_msg = (ID_MSG*)&(ptr->buf); // ID로 형변환
+					printf("[TYPE_ID 받은 데이터] %s\n", id_msg->msg);
+
+					break;
+				default:
+					break;
+			}
+
 			printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
 			printf("[받은 데이터] %s\n", ptr->buf);
-			// ======================//
+			// ================================================================== //
 			// 
 			// ======== 연경 =======
 			addMessage(ptr->buf);

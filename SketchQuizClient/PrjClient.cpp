@@ -158,7 +158,7 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	// ========= 연경 =========
 	static HWND hTimer;    // 타이머 표시 
 	static HWND hWord;     // 제시어 표시
-	int tmp;
+	static HWND hBtnGameStart; // 게임 시작 버튼
 
 	// ========= 지윤 =========
 	static HWND hBtnPenColor;
@@ -189,12 +189,15 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		hBtnErasePic = GetDlgItem(hDlg, IDC_ERASEPIC);
 		g_hBtnErasePic = hBtnErasePic; // 전역 변수에 저장
 		hStaticDummy = GetDlgItem(hDlg, IDC_DUMMY);
-
+		
 
 
 		// ========= 연경 =========
 		g_hTimerStatus = GetDlgItem(hDlg, IDC_EDIT_TIMER);  // 타이머 표시하는 EditText 부분 
 		g_hWordStatus = GetDlgItem(hDlg, IDC_EDIT_WORD);    // 제시어 표시하는 EditText 부분
+		hBtnGameStart = GetDlgItem(hDlg, IDC_GAMESTART);
+		EnableWindow(hBtnGameStart, FALSE);
+
 		g_hDrawDlg = hDlg;
 		WideCharToMultiByte(CP_ACP, 0, ID_NICKNAME, 256, NICKNAME_CHAR, 256, NULL, NULL); //_TCHAR 형 문자열을 char* 형 문자열로 변경
 
@@ -239,6 +242,44 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		//
 
 		
+
+
+		// ========= 
+		// 컨트롤 상태 얻기
+		GetDlgItemTextA(hDlg, IDC_IPADDR, g_ipaddr, sizeof(g_ipaddr));
+		g_port = GetDlgItemInt(hDlg, IDC_PORT, NULL, TRUE);
+		//g_isIPv6 = SendMessage(hChkIsIPv6, BM_GETCHECK, 0, 0);
+		//g_isUDP = SendMessage(hChkIsUDP, BM_GETCHECK, 0, 0);
+
+		//=============  지안 ===============//
+		// 채널에 따라 UDP, TCP 체크 여부 바꾸기
+		switch (channel) {
+		case CHANNEL_TCP: //TCP면 UDP 채널 falsem
+			g_isUDP = false;
+			break;
+		case CHANNEL_UDP1: //UDP면 udp 버튼 true
+			g_isUDP = true;
+			break;
+		case CHANNEL_UDP2: //UDP면 udp 버튼 true
+			g_isUDP = true;
+		default:
+			break;
+		}
+		//=====================================//
+
+		// 소켓 통신 스레드 시작
+		g_hClientThread = CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
+		if (g_hClientThread == NULL) exit(0);
+		// 서버 접속 성공 기다림
+		while (g_bCommStarted == false);
+
+		EnableWindow(hBtnGameStart, TRUE);
+		WaitForSingleObject(g_hReadEvent, INFINITE);
+		// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
+		g_chatmsg.type = TYPE_NOTY;
+		sprintf(g_chatmsg.msg, "[%s] 님이 입장하였습니다!", NICKNAME_CHAR);
+		SetEvent(g_hWriteEvent);
+
 		// 윈도우 클래스 등록
 		WNDCLASS wndclass;
 		wndclass.style = CS_HREDRAW | CS_VREDRAW;
@@ -263,78 +304,52 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (g_hDrawWnd == NULL) exit(1);
 		ShowWindow(g_hDrawWnd, SW_SHOW);
 		UpdateWindow(g_hDrawWnd);
+		// 컨트롤 상태 변경
+		EnableWindow(hChkIsIPv6, FALSE);
+		EnableWindow(hEditIPaddr, FALSE);
+		EnableWindow(hEditPort, FALSE);
+		EnableWindow(hChkIsUDP, FALSE);
+		EnableWindow(hBtnConnect, FALSE);
+		EnableWindow(g_hBtnSendFile, TRUE);
+		EnableWindow(g_hBtnSendMsg, TRUE);
+		SetFocus(hEditMsg);
+		EnableWindow(g_hBtnErasePic, TRUE);
+
+		// ========= 지윤 =========
+		EnableWindow(g_hBtnPenColor, TRUE);
+		EnableWindow(g_hLineWidth, TRUE);
+		ShowWindow(g_hDrawingTextId, SW_SHOW);
+		ShowWindow(g_hDrawingText, SW_SHOW);
+
+
 		return TRUE;
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
-		case IDC_ISIPV6:
-			g_isIPv6 = SendMessage(hChkIsIPv6, BM_GETCHECK, 0, 0);
-			if (g_isIPv6 == false)
-				SetDlgItemText(hDlg, IDC_IPADDR, SERVERIP4);
-			else
-				SetDlgItemText(hDlg, IDC_IPADDR, SERVERIP6);
-			return TRUE;
-		case IDC_CONNECT:
-			// 컨트롤 상태 얻기
-			GetDlgItemTextA(hDlg, IDC_IPADDR, g_ipaddr, sizeof(g_ipaddr));
-			g_port = GetDlgItemInt(hDlg, IDC_PORT, NULL, TRUE);
-			g_isIPv6 = SendMessage(hChkIsIPv6, BM_GETCHECK, 0, 0);
-			g_isUDP = SendMessage(hChkIsUDP, BM_GETCHECK, 0, 0);
-			//=============  지안 ===============//
-			// 채널에 따라 UDP, TCP 체크 여부 바꾸기
-			switch (channel) {
-				case CHANNEL_TCP: //TCP면 UDP 채널 falsem
-					g_isUDP = false;
-					break;
-				case CHANNEL_UDP1: //UDP면 udp 버튼 true
-					g_isUDP = true;
-					break;
-				case CHANNEL_UDP2: //UDP면 udp 버튼 true
-					g_isUDP = true;
-				default:
-					break;
-			}
-			//=====================================//
-
-			// 소켓 통신 스레드 시작
-			g_hClientThread = CreateThread(NULL, 0, ClientMain, NULL, 0, NULL);
-			if (g_hClientThread == NULL) exit(0);
-			// 서버 접속 성공 기다림
-			while (g_bCommStarted == false);
-			// 컨트롤 상태 변경
-			EnableWindow(hChkIsIPv6, FALSE);
-			EnableWindow(hEditIPaddr, FALSE);
-			EnableWindow(hEditPort, FALSE);
-			EnableWindow(hChkIsUDP, FALSE);
-			EnableWindow(hBtnConnect, FALSE);
-			EnableWindow(g_hBtnSendFile, TRUE);
-			EnableWindow(g_hBtnSendMsg, TRUE);
-			SetFocus(hEditMsg);
-			EnableWindow(g_hBtnErasePic, TRUE);
-
-			// ========= 지윤 =========
-			EnableWindow(g_hBtnPenColor, TRUE);
-			EnableWindow(g_hLineWidth, TRUE);
-			ShowWindow(g_hDrawingTextId, SW_SHOW);
-			ShowWindow(g_hDrawingText, SW_SHOW);
-
-			DisplayDrawingUserID(hDlg, userIDs);
+		case IDC_GAMESTART:
 
 			// ========= 연경 =========
-			gameStart(g_hTimerStatus, g_hWordStatus);
+			EnableWindow(hBtnGameStart, TRUE);
 
 			//WaitForSingleObject(g_hReadEvent, INFINITE);
 			//SetEvent(g_hWriteEvent);
-			isMessageQueue = TRUE;
+			//isMessageQueue = TRUE;
+			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
+
+			EnableWindow(hBtnGameStart, FALSE);
 			// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
 			WaitForSingleObject(g_hReadEvent, INFINITE);
 			// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
 			g_chatmsg.type = TYPE_NOTY;
-			sprintf(g_chatmsg.msg, "[%s] 님이 입장하였습니다!", NICKNAME_CHAR);
+			strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
 			SetEvent(g_hWriteEvent);
-
+			//	gameStart(g_hTimerStatus, g_hWordStatus);
 			// ========= 정호 =========
 			EnableWindow(g_hFigureSelect, TRUE);
 			//
+
+			// ========= 지윤 =========
+
+			DisplayDrawingUserID(hDlg, userIDs);
 
 			return TRUE;
 		case IDC_SENDFILE:
@@ -411,6 +426,17 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			closesocket(g_sock);
 			EndDialog(hDlg, 0);
 			return TRUE;
+
+		//case IDC_GAMESTART:
+		//	EnableWindow(hBtnGameStart, FALSE);
+		//	// 이전에 얻은 채팅 메시지 읽기 완료를 기다림
+		//	WaitForSingleObject(g_hReadEvent, INFINITE);
+		//	// 새로운 채팅 메시지를 얻고 쓰기 완료를 알림
+		//	g_chatmsg.type = TYPE_NOTY;
+		//	strcpy(g_chatmsg.msg, "게임이 시작됩니다!");
+		//	SetEvent(g_hWriteEvent);
+		////	gameStart(g_hTimerStatus, g_hWordStatus);
+		//	break;
 		}
 	}
 	return FALSE;
@@ -857,7 +883,13 @@ LRESULT CALLBACK Home_PassWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 // 클라이언트와 데이터 통신
 DWORD WINAPI LoginProcessClient(LPVOID arg)
 {
+	// ====== 지안 ========= //
+	// id_msg 구조체 초기화
+	ID_MSG id_msg;
+	id_msg.type = TYPE_ID;	//id타입
+	strcpy(id_msg.msg, NICKNAME_CHAR);	//NICKNAME_CHAR일 경우
 
+	// ===================== //
 	int retval;
 	// socket()
 	g_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -877,7 +909,7 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 	len = sizeof(NICKNAME_CHAR);
 
 	// 고정 크기 데이터 전송 (TCP 첫 실행시 한번)
-	retval = sendn(g_sock, (char*)&NICKNAME_CHAR, BUFSIZE, 0, serveraddr, false);
+	retval = sendn(g_sock, (char*)&id_msg, BUFSIZE, 0, serveraddr, false);
 
 	printf("[TCP 클라이언트] %d바이트를 보냈습니다.\n", retval);
 	if (retval == SOCKET_ERROR) {
@@ -885,9 +917,10 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 		//break;
 	}
 
-	char recvBuf[BUFSIZE]; // 데이터 받을 버퍼
 	/*
-	while (retval != SOCKET_ERROR) {
+	char recvBuf[BUFSIZE]; // 데이터 받을 버퍼
+	while (1) {
+
 		// 데이터 받기
 		retval = recvn(g_sock, (char*)&recvBuf, BUFSIZE, 0, serveraddr, false); //TCP가 보낸 서버 받기.
 		//retval = recvn(g_sock, buf, retval, 0); // retval를 다시 넣은 이유 : 내가 보낸만큼 다시 받기 위해서이다. (10byte보냈으면 10만큼 받게 N을 설정해준거)
@@ -895,8 +928,8 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 			err_display("recv()");
 			break;
 		}
-		else if (retval == 0)
-			break;
+		//else if (retval == 0)
+		//	break;
 		// 받은 데이터 출력
 		recvBuf[retval] = '\0';
 		printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
@@ -904,9 +937,7 @@ DWORD WINAPI LoginProcessClient(LPVOID arg)
 		MessageBox(NULL, _T("지안이가 구현중인 UDP 채널1 IPv4 클라이언트 소켓임"), _T("알림"), MB_ICONERROR);
 	}
 	*/
-	//retval = sendn(g_sock, (char*)&len, sizeof(int), 0);
-	//// 가변 크기 데이터 전송
-	//retval = sendn(g_sock, (char*)&g_chatmsg, len, 0);
+
 	if (retval == SOCKET_ERROR)
 		return 0;
 
@@ -1150,22 +1181,22 @@ DWORD WINAPI ReadThread(LPVOID arg)
 		//}
 		// 
 
-		if (isMessageQueue == TRUE) {
-			retval = recvn(g_sock, (char*)&g_msgQueue, BUFSIZE, 0, serveraddr, g_isUDP);
-			if (retval == 0 || retval == SOCKET_ERROR) {
-				err_display("recv()");
-				break;
-			}
-			DisplayText("------\r\n");
-			int idx = g_msgQueue.head;
-			for (int i = 0; i < ((g_msgQueue.tail - g_msgQueue.head + BUFSIZE) % BUFSIZE); i++) {
-				DisplayText(g_msgQueue.queue[idx]);
-				DisplayText("\r\n");
-				idx = (idx + 1) % BUFSIZE;
-			}
-			isMessageQueue = FALSE;
-			continue;
-		}
+		//if (isMessageQueue == TRUE) {
+		//	retval = recvn(g_sock, (char*)&g_msgQueue, BUFSIZE, 0, serveraddr, g_isUDP);
+		//	if (retval == 0 || retval == SOCKET_ERROR) {
+		//		err_display("recv()");
+		//		break;
+		//	}
+		//	DisplayText("------\r\n");
+		//	int idx = g_msgQueue.head;
+		//	for (int i = 0; i < ((g_msgQueue.tail - g_msgQueue.head + BUFSIZE) % BUFSIZE); i++) {
+		//		DisplayText(g_msgQueue.queue[idx]);
+		//		DisplayText("\r\n");
+		//		idx = (idx + 1) % BUFSIZE;
+		//	}
+		//	isMessageQueue = FALSE;
+		//	continue;
+		//}
 		retval = recvn(g_sock, (char*)&comm_msg, BUFSIZE, 0, serveraddr, g_isUDP);
 
 		if (retval == 0 || retval == SOCKET_ERROR) {
@@ -1305,4 +1336,8 @@ void DisplayText(const char *fmt, ...)
 	int nLength = GetWindowTextLength(g_hEditStatus);
 	SendMessage(g_hEditStatus, EM_SETSEL, nLength, nLength);
 	SendMessageA(g_hEditStatus, EM_REPLACESEL, FALSE, (LPARAM)cbuf);
+}
+
+void btnGameStart_click() {
+
 }

@@ -3,6 +3,8 @@
 #define TYPE_CHAT     1000              // 메시지 타입: 채팅
 #define TYPE_DRAWLINE 1001              // 메시지 타입: 선 그리기
 #define TYPE_ERASEPIC 1002              // 메시지 타입: 그림 지우기
+#define TYPE_ID		  1003				// 메시지 타입: id (지안)
+#define TYPE_Queue    1004              // 메시지 타입: 메시지 큐(연경)
 
 #define WM_DRAWLINE (WM_USER+1)         // 사용자 정의 윈도우 메시지(1)
 #define WM_ERASEPIC (WM_USER+2)         // 사용자 정의 윈도우 메시지(2)
@@ -48,10 +50,20 @@ typedef struct _ERASEPIC_MSG
 
 // ======= 연경 ======= 
 typedef struct _MESSAGEQUEUE {
-	char queue[256][100] = { NULL };         // 메시지 원형 큐: 이전 대화내용 표시. 꽉 차면 가장 오래된 메시지부터 지워진다.
+	int type;
+	char queue[10][20] = { NULL };         // 메시지 원형 큐: 이전 대화내용 표시. 꽉 차면 가장 오래된 메시지부터 지워진다.
 	int head = 0;                 // 원형 큐 인덱스
 	int tail = 0;
 } MESSAGEQUEUE;
+
+// ======== 지안 ======== //
+// 로그인할때 ID 형식
+typedef struct ID
+{
+	int  type;		// 로그인할때 ID 형식
+	char msg[SIZE_DAT];	// id 내용
+} ID_MSG;
+// ====================== //
 
 // 메인 윈도우(첫화면) 프로시저
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -67,3 +79,5 @@ DWORD WINAPI WriteThread(LPVOID arg);
 
 // 에디트 컨트롤 출력 함수
 void DisplayText(const char *fmt, ...);
+// 게임 시작 버튼 onClick()함수
+void btnGameStart_click();
