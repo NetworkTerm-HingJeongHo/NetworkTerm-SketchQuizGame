@@ -1,175 +1,175 @@
 #include "stdafx.h"
 
-// // =========== 정호 =============
-// 클라이언트 관리 배열
+// // =========== ��ȣ =============
+// Ŭ���̾�Ʈ ���� �迭
 int nTotalSockets = 0;
 int nTotalUDPSockets = 0;
-SOCKETINFO* SocketInfoArray[FD_SETSIZE]; //TCP 유저들 있는 변수
-SOCKADDR_IN UDPSocketInfoArray[FD_SETSIZE]; //UDP 유저들 있는 변수
+SOCKETINFO* SocketInfoArray[FD_SETSIZE]; //TCP ������ �ִ� ����
+SOCKADDR_IN UDPSocketInfoArray[FD_SETSIZE]; //UDP ������ �ִ� ����
 
 SOCKET listen_sock4;
 SOCKADDR_IN serveraddr;
 SOCKET socket_UDP;
 
-// ============= 연경 =============== 
-//char* g_msgQueue[BUFSIZE];    // 메시지 원형 큐: 이전 대화내용 표시. 꽉 차면 가장 오래된 메시지부터 지워진다.
-//int head = 0, tail = 0;           // 원형 큐 인덱스
+// ============= ���� =============== 
+//char* g_msgQueue[BUFSIZE];    // �޽��� ���� ť: ���� ��ȭ���� ǥ��. �� ���� ���� ������ �޽������� ��������.
+//int head = 0, tail = 0;           // ���� ť �ε���
 MESSAGEQUEUE g_msgQueue;
 
 int main(int argc, char* argv[])
 {
-	// ========= 정호 ========
-	// 윈도우 클래스 등록
-	WNDCLASS wndclass;
-	wndclass.style = CS_HREDRAW | CS_VREDRAW;
-	wndclass.lpfnWndProc = WndProc;
-	wndclass.cbClsExtra = 0;
-	wndclass.cbWndExtra = 0;
-	wndclass.hInstance = NULL;
-	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-	wndclass.lpszMenuName = NULL;
-	wndclass.lpszClassName = _T("MyWndClass");
-	if (!RegisterClass(&wndclass)) return 1;
+    // ========= ��ȣ ========
+    // ������ Ŭ���� ���
+    WNDCLASS wndclass;
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
+    wndclass.lpfnWndProc = WndProc;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = NULL;
+    wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+    wndclass.lpszMenuName = NULL;
+    wndclass.lpszClassName = _T("MyWndClass");
+    if (!RegisterClass(&wndclass)) return 1;
 
-	// 임시 윈도우 생성
-	HWND hWnd = CreateWindow(_T("MyWndClass"), _T("TCP 서버"), WS_OVERLAPPEDWINDOW,
-		0, 0, 600, 400, NULL, NULL, NULL, NULL);
-	if (hWnd == NULL) return 1;
-	ShowWindow(hWnd, SW_SHOWNORMAL);
-	UpdateWindow(hWnd);
+    // �ӽ� ������ ����
+    HWND hWnd = CreateWindow(_T("MyWndClass"), _T("TCP ����"), WS_OVERLAPPEDWINDOW,
+        0, 0, 600, 400, NULL, NULL, NULL, NULL);
+    if (hWnd == NULL) return 1;
+    ShowWindow(hWnd, SW_SHOWNORMAL);
+    UpdateWindow(hWnd);
 
-	int retval;
+    int retval;
 
-	// 윈속 초기화
-	WSADATA wsa;
-	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
-		return 1;
+    // ���� �ʱ�ȭ
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0)
+        return 1;
 
-	/*----- TCP/IPv4 소켓 초기화 시작 -----*/
-	// 소켓 생성
-	listen_sock4 = socket(AF_INET, SOCK_STREAM, 0);
-	if (listen_sock4 == INVALID_SOCKET) err_quit("socket()");
+    /*----- TCP/IPv4 ���� �ʱ�ȭ ���� -----*/
+    // ���� ����
+    listen_sock4 = socket(AF_INET, SOCK_STREAM, 0);
+    if (listen_sock4 == INVALID_SOCKET) err_quit("socket()");
 
-	// bind()
-	memset(&serveraddr, 0, sizeof(serveraddr));
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serveraddr.sin_port = htons(SERVERPORT);
-	retval = bind(listen_sock4, (struct sockaddr *)&serveraddr,
-		sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) err_quit("bind()");
+    // bind()
+    memset(&serveraddr, 0, sizeof(serveraddr));
+    serveraddr.sin_family = AF_INET;
+    serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serveraddr.sin_port = htons(SERVERPORT);
+    retval = bind(listen_sock4, (struct sockaddr*)&serveraddr,
+        sizeof(serveraddr));
+    if (retval == SOCKET_ERROR) err_quit("bind()");
 
-	// listen()
-	retval = listen(listen_sock4, SOMAXCONN);
-	if (retval == SOCKET_ERROR) err_quit("listen()");
+    // listen()
+    retval = listen(listen_sock4, SOMAXCONN);
+    if (retval == SOCKET_ERROR) err_quit("listen()");
 
-	// TCP/IPv4 소켓에 논블로킹 모드 설정
-	u_long nonBlockingModeOn = 1;
-	retval = ioctlsocket(listen_sock4, FIONBIO, &nonBlockingModeOn);
-	if (retval == SOCKET_ERROR) {
-		err_quit("ioctlsocket()");
-	}
-	/*----- TCP/IPv4 소켓 초기화 종료 -----*/
+    // TCP/IPv4 ���Ͽ� ������ŷ ��� ����
+    u_long nonBlockingModeOn = 1;
+    retval = ioctlsocket(listen_sock4, FIONBIO, &nonBlockingModeOn);
+    if (retval == SOCKET_ERROR) {
+        err_quit("ioctlsocket()");
+    }
+    /*----- TCP/IPv4 ���� �ʱ�ȭ ���� -----*/
 
-	 /*----- UDP/IPv4 소켓 초기화 시작 -----*/
-   // TODO: 소켓을 생성하고 초기화한다. == 정호 ==
+     /*----- UDP/IPv4 ���� �ʱ�ȭ ���� -----*/
+    // TODO: ������ �����ϰ� �ʱ�ȭ�Ѵ�. == ��ȣ ==
 
-	socket_UDP = socket(AF_INET, SOCK_DGRAM, 0);
-	if (socket_UDP == INVALID_SOCKET)
-	{
-		err_quit("socket()");
-	}
+    socket_UDP = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socket_UDP == INVALID_SOCKET)
+    {
+        err_quit("socket()");
+    }
 
-	// 멀티캐스트 그룹 가입
-	struct ip_mreq mreq1;
-	inet_pton(AF_INET, SERVERIP4_CHAR_UDP1, &mreq1.imr_multiaddr.s_addr); // 가입하거나 탈퇴할 IPv4 멀티케스트 address(주소) (가입할 동아리)
-	mreq1.imr_interface.s_addr = htonl(INADDR_ANY);      // 로컬 ip address (나)
-	retval = setsockopt(socket_UDP, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-		(char*)&mreq1, sizeof(mreq1));
-	if (retval == SOCKET_ERROR) err_quit("setsockopt() 1");
+    // ��Ƽĳ��Ʈ �׷� ����
+    struct ip_mreq mreq1;
+    inet_pton(AF_INET, SERVERIP4_CHAR_UDP1, &mreq1.imr_multiaddr.s_addr); // �����ϰų� Ż���� IPv4 ��Ƽ�ɽ�Ʈ address(�ּ�) (������ ���Ƹ�)
+    mreq1.imr_interface.s_addr = htonl(INADDR_ANY);      // ���� ip address (��)
+    retval = setsockopt(socket_UDP, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+        (char*)&mreq1, sizeof(mreq1));
+    if (retval == SOCKET_ERROR) err_quit("setsockopt() 1");
 
-	// 멀티캐스트 그룹 가입
-	struct ip_mreq mreq2;
-	inet_pton(AF_INET, SERVERIP4_CHAR_UDP2, &mreq2.imr_multiaddr.s_addr); // 가입하거나 탈퇴할 IPv4 멀티케스트 address(주소) (가입할 동아리)
-	mreq2.imr_interface.s_addr = htonl(INADDR_ANY);
-	retval = setsockopt(socket_UDP, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-		(char*)&mreq2, sizeof(mreq2));
-	if (retval == SOCKET_ERROR) err_quit("setsockopt() 2");
+    // ��Ƽĳ��Ʈ �׷� ����
+    struct ip_mreq mreq2;
+    inet_pton(AF_INET, SERVERIP4_CHAR_UDP2, &mreq2.imr_multiaddr.s_addr); // �����ϰų� Ż���� IPv4 ��Ƽ�ɽ�Ʈ address(�ּ�) (������ ���Ƹ�)
+    mreq2.imr_interface.s_addr = htonl(INADDR_ANY);
+    retval = setsockopt(socket_UDP, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+        (char*)&mreq2, sizeof(mreq2));
+    if (retval == SOCKET_ERROR) err_quit("setsockopt() 2");
 
-	// ---------------- 지안 ---------------- //
-	// bind() UDP 그룹 B bind
+    // ---------------- ���� ---------------- //
+    // bind() UDP �׷� B bind
 
-	retval = bind(socket_UDP, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
-	if (retval == SOCKET_ERROR) err_quit("bind()");
+    retval = bind(socket_UDP, (SOCKADDR*)&serveraddr, sizeof(serveraddr));
+    if (retval == SOCKET_ERROR) err_quit("bind()");
 
-	// --------------------------------------- //
+    // --------------------------------------- //
 
 
-	/*----- UDP/IPv4 소켓 초기화 종료 -----*/
+    /*----- UDP/IPv4 ���� �ʱ�ȭ ���� -----*/
 
-	/*----- UDP/IPv6 소켓 초기화 시작 -----*/
-	// TODO: 소켓을 생성하고 초기화한다.
-	/*----- UDP/IPv6 소켓 초기화 종료 -----*/
+    /*----- UDP/IPv6 ���� �ʱ�ȭ ���� -----*/
+    // TODO: ������ �����ϰ� �ʱ�ȭ�Ѵ�.
+    /*----- UDP/IPv6 ���� �ʱ�ȭ ���� -----*/
 
-	// 데이터 통신에 사용할 변수(공통)
-	fd_set rset;
-	SOCKET client_sock;
-	int addrlen;
-	// 데이터 통신에 사용할 변수(IPv4)
-	struct sockaddr_in clientaddr4;
-	// 데이터 통신에 사용할 변수(IPv6)
-	struct sockaddr_in6 clientaddr6;
-	
-	// ========== 정호 ==========
-	int recvLen; // 받은 가변 데이터 크기
-	int sendLen; // 보낼 가변 데이터 크기
+    // ������ ��ſ� ����� ����(����)
+    fd_set rset;
+    SOCKET client_sock;
+    int addrlen;
+    // ������ ��ſ� ����� ����(IPv4)
+    struct sockaddr_in clientaddr4;
+    // ������ ��ſ� ����� ����(IPv6)
+    struct sockaddr_in6 clientaddr6;
 
-	// WSAAsyncSelect()
+    // ========== ��ȣ ==========
+    int recvLen; // ���� ���� ������ ũ��
+    int sendLen; // ���� ���� ������ ũ��
 
-	// TCP는 연결을 해야하므로 FD_ACCEPT를 추가
-	retval = WSAAsyncSelect(listen_sock4, hWnd, WM_SOCKET, FD_ACCEPT | FD_CLOSE);
-	if (retval == SOCKET_ERROR) err_quit("WSAAsyncSelect()");
+    // WSAAsyncSelect()
 
-	// UDP는 TCP와 달리 연결이 필요없으므로
-	// FD_ACCEPT를 하지 않음.
-	// FD_READ로 데이터를 수신할 수 있도록 설정
-	retval = WSAAsyncSelect(socket_UDP, hWnd, WM_SOCKET, FD_READ | FD_CLOSE);
-	if (retval == SOCKET_ERROR) err_quit("WSAAsyncSelect()");
+    // TCP�� ������ �ؾ��ϹǷ� FD_ACCEPT�� �߰�
+    retval = WSAAsyncSelect(listen_sock4, hWnd, WM_SOCKET, FD_ACCEPT | FD_CLOSE);
+    if (retval == SOCKET_ERROR) err_quit("WSAAsyncSelect()");
 
-	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
+    // UDP�� TCP�� �޸� ������ �ʿ�����Ƿ�
+    // FD_ACCEPT�� ���� ����.
+    // FD_READ�� �����͸� ������ �� �ֵ��� ����
+    retval = WSAAsyncSelect(socket_UDP, hWnd, WM_SOCKET, FD_READ | FD_CLOSE);
+    if (retval == SOCKET_ERROR) err_quit("WSAAsyncSelect()");
 
-	// 윈속 종료
-	WSACleanup();
-	return 0;
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    // ���� ����
+    WSACleanup();
+    return 0;
 }
 
-// ======= 정호 =======
-// 윈도우 메시지 처리
+// ======= ��ȣ =======
+// ������ �޽��� ó��
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch (uMsg) {
-		// =========== 지윤 ============
-	case WM_CREATE:
-		InitializeListView(hWnd);
-		return 0;
-		// =============================
-	case WM_SOCKET: // 소켓 관련 윈도우 메시지
-		ProcessSocketMessage(hWnd, uMsg, wParam, lParam);
-		return 0;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    switch (uMsg) {
+        // =========== ���� ============
+    case WM_CREATE:
+        InitializeListView(hWnd);
+        return 0;
+        // =============================
+    case WM_SOCKET: // ���� ���� ������ �޽���
+        ProcessSocketMessage(hWnd, uMsg, wParam, lParam);
+        return 0;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    }
+    return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-// 소켓 관련 윈도우 메시지 처리
+// ���� ���� ������ �޽��� ó��
 void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 
@@ -349,124 +349,110 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 }
 
-// 소켓 정보 얻기
+// ���� ���� ���
 SOCKETINFO* GetSocketInfo(SOCKET sock)
 {
-	// 현재 접속한 클라이언트 중에서 일치하는 소켓 탐색
-	for (int i = 0; i < nTotalSockets; i++)
-	{
-		SOCKETINFO* ptr = SocketInfoArray[i];
-		// 찾았을 경우, 해당 소켓 반환
-		if (ptr->sock == sock)
-		{
-			return ptr;
-		}
-	}
-	return NULL;
+    // ���� ������ Ŭ���̾�Ʈ �߿��� ��ġ�ϴ� ���� Ž��
+    for (int i = 0; i < nTotalSockets; i++)
+    {
+        SOCKETINFO* ptr = SocketInfoArray[i];
+        // ã���� ���, �ش� ���� ��ȯ
+        if (ptr->sock == sock)
+        {
+            return ptr;
+        }
+    }
+    return NULL;
 }
 
-// UDP 클라 정보 추가
+// UDP Ŭ�� ���� �߰�
 bool AddSocketInfoUDP(SOCKADDR_IN addr)
 {
-	// 이전에 접속한 적이 있는 상태인지 확인
-	for (int i = 0; i < nTotalUDPSockets; i++)
-	{
-		if (inet_ntoa(UDPSocketInfoArray[i].sin_addr) == inet_ntoa(addr.sin_addr) &&
-			ntohs(UDPSocketInfoArray[i].sin_port) == ntohs(addr.sin_port) &&
-			ntohs(UDPSocketInfoArray[i].sin_family) == ntohs(addr.sin_family))
-		{
-			return false;
-		}
-	}
+    // ������ ������ ���� �ִ� �������� Ȯ��
+    for (int i = 0; i < nTotalUDPSockets; i++)
+    {
+        if (inet_ntoa(UDPSocketInfoArray[i].sin_addr) == inet_ntoa(addr.sin_addr) &&
+            ntohs(UDPSocketInfoArray[i].sin_port) == ntohs(addr.sin_port) &&
+            ntohs(UDPSocketInfoArray[i].sin_family) == ntohs(addr.sin_family))
+        {
+            return false;
+        }
+    }
 
-	// UDP 클라 정보 추가
-	UDPSocketInfoArray[nTotalUDPSockets++] = addr;
-	return true;
+    // UDP Ŭ�� ���� �߰�
+    UDPSocketInfoArray[nTotalUDPSockets++] = addr;
+    return true;
 }
 
-// TCP 소켓 정보 추가
+// TCP ���� ���� �߰�
 bool AddSocketInfoTCP(SOCKET sock)
 {
-	if (nTotalSockets >= FD_SETSIZE) {
-		printf("[오류] 소켓 정보를 추가할 수 없습니다!\n");
-		return false;
-	}
-	SOCKETINFO *ptr = new SOCKETINFO;
-	if (ptr == NULL) {
-		printf("[오류] 메모리가 부족합니다!\n");
-		return false;
-	}
-	ptr->sock = sock;
-	ptr->recvbytes = 0;
-
-	//========== 지안 =============//
-	// 클라이언트 정보 얻기
-	struct sockaddr_in clientaddr;
-	int addrlen = sizeof(clientaddr);
-	getpeername(sock, (struct sockaddr*)&clientaddr, &addrlen);
-
-	ptr->sin_addr = clientaddr.sin_addr;	// 클라이언트 주소 저장
-	ptr->sin_port = ntohs(clientaddr.sin_port);	// 클라이언트 포트번호 저장
-
-	//============================//
-
-	//// =========== 지윤? ============
-	//AddClientToListView(ntohs(clientaddr.sin_port));
+    if (nTotalSockets >= FD_SETSIZE) {
+        printf("[����] ���� ������ �߰��� �� �����ϴ�!\n");
+        return false;
+    }
+    SOCKETINFO* ptr = new SOCKETINFO;
+    if (ptr == NULL) {
+        printf("[����] �޸𸮰� �����մϴ�!\n");
+        return false;
+    }
+    ptr->sock = sock;
+    ptr->recvbytes = 0;
 
 
-	// TCP 소켓 배열에 추가
-	SocketInfoArray[nTotalSockets++] = ptr;
+    // TCP ���� �迭�� �߰�
+    SocketInfoArray[nTotalSockets++] = ptr;
 
-	return true;
+    return true;
 }
 
-// 소켓 정보 삭제
+// ���� ���� ����
 void RemoveSocketInfo(SOCKET sock)
 {
 
-	// 클라이언트 정보 얻기
-	struct sockaddr_in clientaddr;
-	int addrlen = sizeof(clientaddr);
-	getpeername(sock, (struct sockaddr*)&clientaddr, &addrlen);
-	// 클라이언트 정보 출력
-	char addr[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &clientaddr.sin_addr, addr, sizeof(addr));
-	printf("[TCP/IPv4 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d\n",
-		addr, ntohs(clientaddr.sin_port));
-	// =========== 지윤 ============
-	RemoveClientFromListView(ntohs(clientaddr.sin_port));
-	DisplayClientList();
-	// =============================
+    // Ŭ���̾�Ʈ ���� ���
+    struct sockaddr_in clientaddr;
+    int addrlen = sizeof(clientaddr);
+    getpeername(sock, (struct sockaddr*)&clientaddr, &addrlen);
+    // Ŭ���̾�Ʈ ���� ���
+    char addr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &clientaddr.sin_addr, addr, sizeof(addr));
+    printf("[TCP/IPv4 ����] Ŭ���̾�Ʈ ����: IP �ּ�=%s, ��Ʈ ��ȣ=%d\n",
+        addr, ntohs(clientaddr.sin_port));
+    // =========== ���� ============
+    RemoveClientFromListView(ntohs(clientaddr.sin_port));
+    DisplayClientList();
+    // =============================
 
-	// 클라이언트 소켓 제거
-	for (int i = 0; i < nTotalSockets; i++)
-	{
-		SOCKETINFO* ptr = SocketInfoArray[i];
-		// 찾았을 경우, 해당 소켓 반환
-		if (ptr->sock == sock)
-		{
-			if (i != (nTotalSockets - 1))
-			{
-				SocketInfoArray[i] = SocketInfoArray[nTotalSockets - 1];
-			}
-			--nTotalSockets;
-		}
-	}
+    // Ŭ���̾�Ʈ ���� ����
+    for (int i = 0; i < nTotalSockets; i++)
+    {
+        SOCKETINFO* ptr = SocketInfoArray[i];
+        // ã���� ���, �ش� ���� ��ȯ
+        if (ptr->sock == sock)
+        {
+            if (i != (nTotalSockets - 1))
+            {
+                SocketInfoArray[i] = SocketInfoArray[nTotalSockets - 1];
+            }
+            --nTotalSockets;
+        }
+    }
 
-	// 소켓 닫기
-	closesocket(sock);
+    // ���� �ݱ�
+    closesocket(sock);
 }
 
 
 void addMessage(char* message) {
-	if ((g_msgQueue.tail + 1) % BUFSIZE == g_msgQueue.head) { //큐가 꽉찬 경우: 
-		g_msgQueue.head = (g_msgQueue.head + 1) % BUFSIZE; //마지막 요소를 하나 지우고 공간 하나를 확보한다.
-	}
-	strcpy(g_msgQueue.queue[g_msgQueue.tail], message);
-	g_msgQueue.tail = (g_msgQueue.tail + 1) % BUFSIZE;
+    if ((g_msgQueue.tail + 1) % BUFSIZE == g_msgQueue.head) { //ť�� ���� ���: 
+        g_msgQueue.head = (g_msgQueue.head + 1) % BUFSIZE; //������ ��Ҹ� �ϳ� ����� ���� �ϳ��� Ȯ���Ѵ�.
+    }
+    strcpy(g_msgQueue.queue[g_msgQueue.tail], message);
+    g_msgQueue.tail = (g_msgQueue.tail + 1) % BUFSIZE;
 }
 
-// 서버에서 클라이언트에 
+// �������� Ŭ���̾�Ʈ�� 
 DWORD WINAPI messageQueueThread(LPVOID arg) {
-	return 0;
+    return 0;
 }
