@@ -17,6 +17,11 @@ void setIDInSocket(char cilentID[], SOCKETINFO* ptr) {
 
 }
 
+//ID_MSG* a;
+//a = (ID_MSG*)&(ptr->buf);
+//printf("[받은 데이터] %s\n", a->msg);
+//setIDInSocket(a->msg, ptr);
+
 // 소켓 ID (닉네임) 중복확인하는 함수. (
 bool CheckIDDuplication(int nTotalSockets, SOCKETINFO* SocketInfoArray[], _TCHAR id[])
 {							// 총 소켓 개수, 소켓 배열, 클라에게 받은 비교할 닉네임
