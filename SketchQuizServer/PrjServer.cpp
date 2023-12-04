@@ -246,14 +246,19 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					ID_MSG* id_msg;
 					id_msg = (ID_MSG*)&(ptr->buf); // ID로 형변환
 					printf("[TYPE_ID 받은 데이터] %s\n", id_msg->msg);
+					setIDInSocket(id_msg->msg, ptr); //id 등록
+					printf("[TCP] TYPE_ID, 현재 소켓 닉네임 등록완료 : %s\n", ptr->id_nickname_char);
+					printf("[TCP] TYPE_ID, 현재 소켓 port 등록완료 : %d\n", ptr->sin_port);
+					printf("[TCP] TYPE_ID, 현재 소켓 주소(char) : %s\n", inet_ntoa(ptr->sin_addr));
+					MessageBox(NULL, ptr->id_nickname, _T("현재 소켓 닉네임 등록완료(_TCHAR)"), MB_ICONERROR);
 					//strcpy((char*)ptr->id_nickname, id_msg->msg);
 					break;
 				default:
 					break;
 			}
 
-			printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
-			printf("[받은 데이터] %s\n", ptr->buf);
+			//printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
+			//printf("[받은 데이터] %s\n", ptr->buf);
 			// ================================================================== //
 			// 
 			// ======== 연경 =======
@@ -384,6 +389,20 @@ bool AddSocketInfoTCP(SOCKET sock)
 	}
 	ptr->sock = sock;
 	ptr->recvbytes = 0;
+
+	//========== 지안 =============//
+	// 클라이언트 정보 얻기
+	struct sockaddr_in clientaddr;
+	int addrlen = sizeof(clientaddr);
+	getpeername(sock, (struct sockaddr*)&clientaddr, &addrlen);
+
+	ptr->sin_addr = clientaddr.sin_addr;	// 클라이언트 주소 저장
+	ptr->sin_port = ntohs(clientaddr.sin_port);	// 클라이언트 포트번호 저장
+
+	//============================//
+
+	//// =========== 지윤? ============
+	//AddClientToListView(ntohs(clientaddr.sin_port));
 
 
 	// TCP 소켓 배열에 추가

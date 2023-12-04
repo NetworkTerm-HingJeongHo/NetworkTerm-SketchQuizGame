@@ -21,9 +21,13 @@ typedef struct _SOCKETINFO
 	SOCKET sock;
 	char   buf[BUFSIZE + 1];
 	int    recvbytes;
+	// ===== 지안 ====== 
+	USHORT sin_port;	// 소켓 포트 번호
+	IN_ADDR sin_addr;	// 소켓 ip 주소 
+	CHAR id_nickname_char[BUFSIZE]; // 사용자 닉네임 char 버전.
 
 	// ===== 연경 ======
-	_TCHAR id_nickname[BUFSIZE]; // 사용자 닉네임
+	_TCHAR id_nickname[BUFSIZE]; // 사용자 닉네임 Tchar 버전.
 	int    score = 0;       // 게임 플레이 점수
 } SOCKETINFO;
 
