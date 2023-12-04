@@ -233,6 +233,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				return;
 			}
 			// 고정 데이터 받기
+
 			retval = recv(ptr->sock, ptr->buf, BUFSIZE, 0);
 			// ============================== 지안 ================================//
 			// COMM_MSG 타입으로 형변환 (기보타입) -> 구조체 type을 얻어내기 위함이다.
@@ -247,6 +248,15 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					id_msg = (ID_MSG*)&(ptr->buf); // ID로 형변환
 					printf("[TYPE_ID 받은 데이터] %s\n", id_msg->msg);
 					//strcpy((char*)ptr->id_nickname, id_msg->msg);
+					break;
+				// ===== 연경 ====
+				case TYPE_CHAT:
+					fd = fopen("chatting_log.txt", "a");
+					CHAT_MSG* chat_msg;
+					chat_msg = (CHAT_MSG*)comm_msg;
+					fwrite(chat_msg->msg, sizeof(char*), sizeof(chat_msg->msg), fd);
+					fclose(fd);
+
 					break;
 				default:
 					break;

@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="chatting.cpp" />
     <ClCompile Include="DisplayClientList.cpp" />
     <ClCompile Include="Login.cpp" />
     <ClCompile Include="PrjServer.cpp">
@@ -153,6 +154,7 @@
     <ClCompile Include="Winsock.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="chatting.h" />
     <ClInclude Include="DisplayClientList.h" />
     <ClInclude Include="Login.h" />
     <ClInclude Include="PrjServer.h" />
