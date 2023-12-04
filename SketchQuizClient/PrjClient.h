@@ -4,6 +4,7 @@
 #define TYPE_DRAWLINE 1001              // 메시지 타입: 선 그리기
 #define TYPE_ERASEPIC 1002              // 메시지 타입: 그림 지우기
 #define TYPE_ID		  1003				// 메시지 타입: id (지안)
+#define TYPE_Queue    1004              // 메시지 타입: 메시지 큐(연경)
 
 #define WM_DRAWLINE (WM_USER+1)         // 사용자 정의 윈도우 메시지(1)
 #define WM_ERASEPIC (WM_USER+2)         // 사용자 정의 윈도우 메시지(2)
@@ -49,7 +50,8 @@ typedef struct _ERASEPIC_MSG
 
 // ======= 연경 ======= 
 typedef struct _MESSAGEQUEUE {
-	char queue[256][100] = { NULL };         // 메시지 원형 큐: 이전 대화내용 표시. 꽉 차면 가장 오래된 메시지부터 지워진다.
+	int type;
+	char queue[10][20] = { NULL };         // 메시지 원형 큐: 이전 대화내용 표시. 꽉 차면 가장 오래된 메시지부터 지워진다.
 	int head = 0;                 // 원형 큐 인덱스
 	int tail = 0;
 } MESSAGEQUEUE;
