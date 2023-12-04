@@ -2,6 +2,8 @@
 
 // // =========== 정호 =============
 // 클라이언트 관리 배열
+// // =========== ��ȣ =============
+// Ŭ���̾�Ʈ ���� �迭
 int nTotalSockets = 0;
 int nTotalUDPSockets = 0;
 SOCKETINFO* SocketInfoArray[FD_SETSIZE]; //TCP 유저들 있는 변수
@@ -14,12 +16,17 @@ SOCKET socket_UDP;
 // ============= 연경 =============== 
 //char* g_msgQueue[BUFSIZE];    // 메시지 원형 큐: 이전 대화내용 표시. 꽉 차면 가장 오래된 메시지부터 지워진다.
 //int head = 0, tail = 0;           // 원형 큐 인덱스
+// ============= ���� =============== 
+//char* g_msgQueue[BUFSIZE];    // �޽��� ���� ť: ���� ��ȭ���� ǥ��. �� ���� ���� ������ �޽������� ��������.
+//int head = 0, tail = 0;           // ���� ť �ε���
 MESSAGEQUEUE g_msgQueue;
 
 int main(int argc, char* argv[])
 {
     // ========= 정호 ========
     // 윈도우 클래스 등록
+    // ========= ��ȣ ========
+    // ������ Ŭ���� ���
     WNDCLASS wndclass;
     wndclass.style = CS_HREDRAW | CS_VREDRAW;
     wndclass.lpfnWndProc = WndProc;
@@ -35,6 +42,8 @@ int main(int argc, char* argv[])
 
     // 임시 윈도우 생성
     HWND hWnd = CreateWindow(_T("MyWndClass"), _T("TCP 서버"), WS_OVERLAPPEDWINDOW,
+    // �ӽ� ������ ����
+    HWND hWnd = CreateWindow(_T("MyWndClass"), _T("TCP ����"), WS_OVERLAPPEDWINDOW,
         0, 0, 600, 400, NULL, NULL, NULL, NULL);
     if (hWnd == NULL) return 1;
     ShowWindow(hWnd, SW_SHOWNORMAL);
@@ -72,6 +81,7 @@ int main(int argc, char* argv[])
         err_quit("ioctlsocket()");
     }
     /*----- TCP/IPv4 소켓 초기화 종료 -----*/
+    /*----- TCP/IPv4 ���� �ʱ�ȭ ���� -----*/
 
      /*----- UDP/IPv4 소켓 초기화 시작 -----*/
     // TODO: 소켓을 생성하고 초기화한다. == 정호 ==
@@ -114,12 +124,15 @@ int main(int argc, char* argv[])
     /*----- UDP/IPv6 소켓 초기화 종료 -----*/
 
     // 데이터 통신에 사용할 변수(공통)
+    // ������ ��ſ� ����� ����(����)
     fd_set rset;
     SOCKET client_sock;
     int addrlen;
     // 데이터 통신에 사용할 변수(IPv4)
+    // ������ ��ſ� ����� ����(IPv4)
     struct sockaddr_in clientaddr4;
     // 데이터 통신에 사용할 변수(IPv6)
+    // ������ ��ſ� ����� ����(IPv6)
     struct sockaddr_in6 clientaddr6;
 
     // ========== 정호 ==========
@@ -129,6 +142,7 @@ int main(int argc, char* argv[])
     // WSAAsyncSelect()
 
     // TCP는 연결을 해야하므로 FD_ACCEPT를 추가
+    // TCP�� ������ �ؾ��ϹǷ� FD_ACCEPT�� �߰�
     retval = WSAAsyncSelect(listen_sock4, hWnd, WM_SOCKET, FD_ACCEPT | FD_CLOSE);
     if (retval == SOCKET_ERROR) err_quit("WSAAsyncSelect()");
 
@@ -151,15 +165,19 @@ int main(int argc, char* argv[])
 
 // ======= 정호 =======
 // 윈도우 메시지 처리
+// ======= ��ȣ =======
+// ������ �޽��� ó��
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg) {
         // =========== 지윤 ============
+        // =========== ���� ============
     case WM_CREATE:
         InitializeListView(hWnd);
         return 0;
         // =============================
     case WM_SOCKET: // 소켓 관련 윈도우 메시지
+    case WM_SOCKET: // ���� ���� ������ �޽���
         ProcessSocketMessage(hWnd, uMsg, wParam, lParam);
         return 0;
     case WM_DESTROY:
@@ -170,6 +188,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 // 소켓 관련 윈도우 메시지 처리
+// ���� ���� ������ �޽��� ó��
 void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     FILE* fd;
@@ -181,6 +200,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     char buf[BUFSIZE + 1];
 
     // 오류 발생 여부 확인
+    // ���� �߻� ���� Ȯ��
     if (WSAGETSELECTERROR(lParam)) {
         err_display(WSAGETSELECTERROR(lParam));
         RemoveSocketInfo(wParam);
@@ -188,8 +208,10 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     // 메시지 처리
+    // �޽��� ó��
     switch (WSAGETSELECTEVENT(lParam)) {
         // 접속
+        // ����
     case FD_ACCEPT:
         addrlen = sizeof(clientaddr);
         client_sock = accept(listen_sock4, (SOCKADDR*)&clientaddr, &addrlen);
@@ -200,6 +222,8 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         else {
             // 접속한 클라이언트 정보 출력
             printf("\n[TCP/IPv4 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",
+            // ������ Ŭ���̾�Ʈ ���� ���
+            printf("\n[TCP/IPv4 ����] Ŭ���̾�Ʈ ����: IP �ּ�=%s, ��Ʈ ��ȣ=%d\n",
                 inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
             // =========== 지윤 ============
             //AddClientToListView(ntohs(clientaddr.sin_port));
@@ -207,6 +231,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // =============================
 
             // 소켓 정보 추가
+            // ���� ���� �߰�
             AddSocketInfoTCP(client_sock);
             retval = WSAAsyncSelect(client_sock, hWnd,
                 WM_SOCKET, FD_READ | FD_WRITE | FD_CLOSE);
@@ -232,16 +257,21 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return;
             }
             // 고정 데이터 받기
+            // ���� ������ �ޱ�
             COMM_MSG comm_msg2;
             retval = recv(ptr->sock, ptr->buf, BUFSIZE, 0);
 
             // ============================== 지안 ================================//
             // COMM_MSG 타입으로 형변환 (기보타입) -> 구조체 type을 얻어내기 위함이다.
+            // ============================== ���� ================================//
+            // COMM_MSG Ÿ������ ����ȯ (�⺸Ÿ��) -> ����ü type�� ���� �����̴�.
             COMM_MSG* comm_msg;
             comm_msg = (COMM_MSG*)&(ptr->buf);
             printf("[COMM_MSG type] %d\n", comm_msg->type); //얻은 type 출력
+            printf("[COMM_MSG type] %d\n", comm_msg->type); //���� type ���
 
             // Type에 따라 다른 구조체를 가진 switch (직접 형변환 해줘야 함)
+            // Type�� ���� �ٸ� ����ü�� ���� switch (���� ����ȯ ����� ��)
             switch (comm_msg->type) {
             case (TYPE_ID):   // TYPE_ID 인 경우 (id 출력)
                 ID_MSG* id_msg;
@@ -250,6 +280,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 //strcpy((char*)ptr->id_nickname, id_msg->msg);
                 break;
                 // ===== 연경 ====
+                // ===== ���� ====
             case TYPE_CHAT:
                 fd = fopen("chatting_log.txt", "a");
                 CHAT_MSG* chat_msg;
@@ -288,6 +319,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             addrlen = sizeof(clientaddr);
             retval = recvfrom(socket_UDP, buf, BUFSIZE, 0, (SOCKADDR*)&clientaddr, &addrlen);
             printf("[UDP] 데이터 길이 : %d, 데이터 : %s\n", retval, buf);
+            printf("[UDP] ������ ���� : %d, ������ : %s\n", retval, buf);
             if (retval == SOCKET_ERROR) {
                 err_display("recvfrom()");
                 return;
@@ -297,10 +329,12 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // ====================
 
             // UDP로 접속한 클라 정보 수집
+            // UDP�� ������ Ŭ�� ���� ����
             AddSocketInfoUDP(clientaddr);
         }
     case FD_WRITE:
         // UDP 소켓이 아닌 경우 (TCP인 경우)
+        // UDP ������ �ƴ� ��� (TCP�� ���)
         if (wParam != socket_UDP)
         {
             ptr = GetSocketInfo(wParam);
@@ -318,6 +352,7 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                         err_display("send()");
                         RemoveSocketInfo(j);
                         --j; // 루프 인덱스 보정
+                        --j; // ���� �ε��� ����
                         continue;
                     }
                 }
@@ -346,13 +381,16 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 // 소켓 정보 얻기
+// ���� ���� ���
 SOCKETINFO* GetSocketInfo(SOCKET sock)
 {
     // 현재 접속한 클라이언트 중에서 일치하는 소켓 탐색
+    // ���� ������ Ŭ���̾�Ʈ �߿��� ��ġ�ϴ� ���� Ž��
     for (int i = 0; i < nTotalSockets; i++)
     {
         SOCKETINFO* ptr = SocketInfoArray[i];
         // 찾았을 경우, 해당 소켓 반환
+        // ã���� ���, �ش� ���� ��ȯ
         if (ptr->sock == sock)
         {
             return ptr;
@@ -362,9 +400,11 @@ SOCKETINFO* GetSocketInfo(SOCKET sock)
 }
 
 // UDP 클라 정보 추가
+// UDP Ŭ�� ���� �߰�
 bool AddSocketInfoUDP(SOCKADDR_IN addr)
 {
     // 이전에 접속한 적이 있는 상태인지 확인
+    // ������ ������ ���� �ִ� �������� Ȯ��
     for (int i = 0; i < nTotalUDPSockets; i++)
     {
         if (inet_ntoa(UDPSocketInfoArray[i].sin_addr) == inet_ntoa(addr.sin_addr) &&
@@ -385,6 +425,7 @@ bool AddSocketInfoTCP(SOCKET sock)
 {
     if (nTotalSockets >= FD_SETSIZE) {
         printf("[오류] 소켓 정보를 추가할 수 없습니다!\n");
+        printf("[����] ���� ������ �߰��� �� �����ϴ�!\n");
         return false;
     }
     SOCKETINFO* ptr = new SOCKETINFO;
@@ -403,10 +444,12 @@ bool AddSocketInfoTCP(SOCKET sock)
 }
 
 // 소켓 정보 삭제
+// ���� ���� ����
 void RemoveSocketInfo(SOCKET sock)
 {
 
     // 클라이언트 정보 얻기
+    // Ŭ���̾�Ʈ ���� ���
     struct sockaddr_in clientaddr;
     int addrlen = sizeof(clientaddr);
     getpeername(sock, (struct sockaddr*)&clientaddr, &addrlen);
@@ -414,6 +457,7 @@ void RemoveSocketInfo(SOCKET sock)
     char addr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &clientaddr.sin_addr, addr, sizeof(addr));
     printf("[TCP/IPv4 서버] 클라이언트 종료: IP 주소=%s, 포트 번호=%d\n",
+    printf("[TCP/IPv4 ����] Ŭ���̾�Ʈ ����: IP �ּ�=%s, ��Ʈ ��ȣ=%d\n",
         addr, ntohs(clientaddr.sin_port));
     // =========== 지윤 ============
     RemoveClientFromListView(ntohs(clientaddr.sin_port));
@@ -421,6 +465,7 @@ void RemoveSocketInfo(SOCKET sock)
     // =============================
 
     // 클라이언트 소켓 제거
+    // Ŭ���̾�Ʈ ���� ����
     for (int i = 0; i < nTotalSockets; i++)
     {
         SOCKETINFO* ptr = SocketInfoArray[i];
@@ -449,6 +494,7 @@ void addMessage(char* message) {
 }
 
 // 서버에서 클라이언트에 
+// �������� Ŭ���̾�Ʈ�� 
 DWORD WINAPI messageQueueThread(LPVOID arg) {
     return 0;
 }
