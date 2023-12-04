@@ -237,108 +237,119 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             comm_msg = (COMM_MSG*)&(ptr->buf);
             printf("[COMM_MSG type] %d\n", comm_msg->type); //얻은 type 출력
 
-            // Type에 따라 다른 구조체를 가진 switch (직접 형변환 해줘야 함)
-            switch (comm_msg->type) {
-            case (TYPE_ID):   // TYPE_ID 인 경우 (id 출력)
-                ID_MSG* id_msg;
-                id_msg = (ID_MSG*)&(ptr->buf); // ID로 형변환
-                printf("[TYPE_ID 받은 데이터] %s\n", id_msg->msg);
-                //strcpy((char*)ptr->id_nickname, id_msg->msg);
-                break;
-                // ===== 연경 ====
-            case TYPE_CHAT:
-                fd = fopen("chatting_log.txt", "a");
-                CHAT_MSG* chat_msg;
-                chat_msg = (CHAT_MSG*)comm_msg;
-                fwrite(chat_msg->msg, sizeof(char*), sizeof(chat_msg->msg), fd);
-                fclose(fd);
+			// Type에 따라 다른 구조체를 가진 switch (직접 형변환 해줘야 함)
+			switch (comm_msg->type) {
+				case (TYPE_ID) :	// TYPE_ID 인 경우 (id 출력)
+					ID_MSG* id_msg;
+					id_msg = (ID_MSG*)&(ptr->buf); // ID로 형변환
+					printf("[TYPE_ID 받은 데이터] %s\n", id_msg->msg);
 
-                break;
-            default:
-                break;
-            }
+					setIDInSocket(id_msg->msg, ptr); //id 등록
+					printf("[TCP] TYPE_ID, 현재 소켓 닉네임 등록완료 : %s\n", ptr->id_nickname_char);
+					printf("[TCP] TYPE_ID, 현재 소켓 port 등록완료 : %d\n", ptr->sin_port);
+					printf("[TCP] TYPE_ID, 현재 소켓 주소(char) : %s\n", inet_ntoa(ptr->sin_addr));
+					MessageBox(NULL, ptr->id_nickname, _T("현재 소켓 닉네임 등록완료(_TCHAR)"), MB_ICONERROR);
+          
+					// =========== 지윤 ============
+					AddClientToListView(ptr->sin_port, ptr->id_nickname_char);
+					DisplayClientList();
+					// =============================
 
-            printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
-            printf("[받은 데이터] %s\n", ptr->buf);
-            // ================================================================== //
-            // 
-            // ======== 연경 =======
-            addMessage(ptr->buf);
-            // ====================
+					break;
+				// ===== ���� ====
+				case TYPE_CHAT:
+					fd = fopen("chatting_log.txt", "a");
+					CHAT_MSG* chat_msg;
+					chat_msg = (CHAT_MSG*)comm_msg;
+					fwrite(chat_msg->msg, sizeof(char*), sizeof(chat_msg->msg), fd);
+					fclose(fd);
 
-            if (retval == SOCKET_ERROR) {
-                err_display("recv()");
-                RemoveSocketInfo(wParam);
-                return;
-            }
-            printf("[TCP] 데이터 길이 : %d, 데이터 : %s\n", retval, buf);
-            // 받은 바이트 수 누적
-            ptr->recvbytes += retval;
+					break;
+				default:
+					break;
+			}
 
-            // 채팅 데이터만 표기한다.
-        }
-        // UDP socket
-        else
-        {
-            // 데이터 받기
-            addrlen = sizeof(clientaddr);
-            retval = recvfrom(socket_UDP, buf, BUFSIZE, 0, (SOCKADDR*)&clientaddr, &addrlen);
-            printf("[UDP] 데이터 길이 : %d, 데이터 : %s\n", retval, buf);
-            if (retval == SOCKET_ERROR) {
-                err_display("recvfrom()");
-                return;
-            }
-            // ======== 연경 =======
-            addMessage(buf);
-            // ====================
+			//printf("[TCP 클라이언트] %d바이트를 받았습니다.\n", retval);
+			//printf("[받은 데이터] %s\n", ptr->buf);
+			// ================================================================== //
+			// 
+			// ======== 연경 =======
+			addMessage(ptr->buf);
+			// ====================
 
-            // UDP로 접속한 클라 정보 수집
-            AddSocketInfoUDP(clientaddr);
-        }
-    case FD_WRITE:
-        // UDP 소켓이 아닌 경우 (TCP인 경우)
-        if (wParam != socket_UDP)
-        {
-            ptr = GetSocketInfo(wParam);
-            //for (int i = 0; i < nTotalSockets; i++) {
-            //   SOCKETINFO* ptr = SocketInfoArray[i];
-            if (ptr->recvbytes == BUFSIZE) {
-                // 받은 바이트 수 리셋
-                ptr->recvbytes = 0;
+			if (retval == SOCKET_ERROR) {
+				err_display("recv()");
+				RemoveSocketInfo(wParam);
+				return;
+			}
+			printf("[TCP] 데이터 길이 : %d, 데이터 : %s\n", retval, buf);
+			// 받은 바이트 수 누적
+			ptr->recvbytes += retval;
 
-                // 현재 접속한 모든 클라이언트에게 데이터를 보냄!
-                for (int j = 0; j < nTotalSockets; j++) {
-                    SOCKETINFO* ptr2 = SocketInfoArray[j];
-                    retval = send(ptr2->sock, ptr->buf, BUFSIZE, 0);
-                    if (retval == SOCKET_ERROR) {
-                        err_display("send()");
-                        RemoveSocketInfo(j);
-                        --j; // 루프 인덱스 보정
-                        continue;
-                    }
-                }
-            }
-            //}
-        }
-        // UDP socket
-        else
-        {
-            for (int i = 0; i < nTotalUDPSockets; i++)
-            {
-                SOCKADDR_IN clientUDP = UDPSocketInfoArray[i];
-                // 데이터 보내기
-                retval = sendto(socket_UDP, buf, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
-                if (retval == SOCKET_ERROR) {
-                    err_display("sendto()");
-                    return;
-                }
-            }
-        }
-        break;
-    case FD_CLOSE:
-        RemoveSocketInfo(wParam);
-        break;
-    }
+			// 채팅 데이터만 표기한다.
+		}
+		// UDP socket
+		else
+		{
+			// 데이터 받기
+			addrlen = sizeof(clientaddr);
+			retval = recvfrom(socket_UDP, buf, BUFSIZE, 0, (SOCKADDR*)&clientaddr, &addrlen);
+			printf("[UDP] 데이터 길이 : %d, 데이터 : %s\n", retval, buf);
+			if (retval == SOCKET_ERROR) {
+				err_display("recvfrom()");
+				return;
+			}
+			// ======== 연경 =======
+			addMessage(buf);
+			// ====================
+
+			// UDP로 접속한 클라 정보 수집
+			AddSocketInfoUDP(clientaddr);
+		}
+	case FD_WRITE:
+		// UDP 소켓이 아닌 경우 (TCP인 경우)
+		if (wParam != socket_UDP)
+		{
+			ptr = GetSocketInfo(wParam);
+			//for (int i = 0; i < nTotalSockets; i++) {
+			//	SOCKETINFO* ptr = SocketInfoArray[i];
+			if (ptr->recvbytes == BUFSIZE) {
+				// 받은 바이트 수 리셋
+				ptr->recvbytes = 0;
+
+				// 현재 접속한 모든 클라이언트에게 데이터를 보냄!
+				for (int j = 0; j < nTotalSockets; j++) {
+					SOCKETINFO* ptr2 = SocketInfoArray[j];
+					retval = send(ptr2->sock, ptr->buf, BUFSIZE, 0);
+					if (retval == SOCKET_ERROR) {
+						err_display("send()");
+						RemoveSocketInfo(j);
+						--j; // 루프 인덱스 보정
+						continue;
+					}
+				}
+			}
+			//}
+		}
+		// UDP socket
+		else
+		{
+			for (int i = 0; i < nTotalUDPSockets; i++)
+			{
+				SOCKADDR_IN clientUDP = UDPSocketInfoArray[i];
+				// 데이터 보내기
+				retval = sendto(socket_UDP, buf, BUFSIZE, 0, (SOCKADDR*)&clientUDP, sizeof(clientUDP));
+				if (retval == SOCKET_ERROR) {
+					err_display("sendto()");
+					return;
+				}
+			}
+		}
+		break;
+	case FD_CLOSE:
+		RemoveSocketInfo(wParam);
+		break;
+	}
 }
 
 // 소켓 정보 얻기
