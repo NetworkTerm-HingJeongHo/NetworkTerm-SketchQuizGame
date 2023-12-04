@@ -233,8 +233,9 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				return;
 			}
 			// 고정 데이터 받기
-
+			COMM_MSG comm_msg2;
 			retval = recv(ptr->sock, ptr->buf, BUFSIZE, 0);
+
 			// ============================== 지안 ================================//
 			// COMM_MSG 타입으로 형변환 (기보타입) -> 구조체 type을 얻어내기 위함이다.
 			COMM_MSG* comm_msg;
@@ -379,7 +380,7 @@ bool AddSocketInfoUDP(SOCKADDR_IN addr)
 	UDPSocketInfoArray[nTotalUDPSockets++] = addr;
 	return true;
 }
-
+//
 // TCP 소켓 정보 추가
 bool AddSocketInfoTCP(SOCKET sock)
 {

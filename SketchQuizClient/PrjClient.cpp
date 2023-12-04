@@ -7,6 +7,7 @@ HANDLE LoginProcessClientThread; // 로그인 프로세스 스레드, stdafx.h 파일에 같은
 
 // 홈 창 변수
 int channel;	//udp 채널 가져오기. stdafx.h 파일에 같은 주소에 저장하기 위함
+//
 
 //-------------------------------//
 
