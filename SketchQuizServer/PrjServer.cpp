@@ -172,20 +172,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 // 소켓 관련 윈도우 메시지 처리
 void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    FILE* fd;
-    // 데이터 통신에 사용할 변수
-    SOCKETINFO* ptr;
-    SOCKET client_sock;
-    SOCKADDR_IN clientaddr;
-    int addrlen, retval;
-    char buf[BUFSIZE + 1];
 
-    // 오류 발생 여부 확인
-    if (WSAGETSELECTERROR(lParam)) {
-        err_display(WSAGETSELECTERROR(lParam));
-        RemoveSocketInfo(wParam);
-        return;
-    }
+	FILE* fd;
+	// 데이터 통신에 사용할 변수
+	SOCKETINFO* ptr;
+	SOCKET client_sock;
+	SOCKADDR_IN clientaddr;
+	int addrlen, retval;
+	char buf[BUFSIZE + 1];
+
+	// 오류 발생 여부 확인
+	if (WSAGETSELECTERROR(lParam)) {
+		err_display(WSAGETSELECTERROR(lParam));
+		RemoveSocketInfo(wParam);
+		return;
+	}
 
     // 메시지 처리
     switch (WSAGETSELECTEVENT(lParam)) {
@@ -201,10 +202,6 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // 접속한 클라이언트 정보 출력
             printf("\n[TCP/IPv4 서버] 클라이언트 접속: IP 주소=%s, 포트 번호=%d\n",
                 inet_ntoa(clientaddr.sin_addr), ntohs(clientaddr.sin_port));
-            // =========== 지윤 ============
-            //AddClientToListView(ntohs(clientaddr.sin_port));
-            //DisplayClientList();
-            // =============================
 
             // 소켓 정보 추가
             AddSocketInfoTCP(client_sock);
@@ -251,8 +248,8 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					MessageBox(NULL, ptr->id_nickname, _T("현재 소켓 닉네임 등록완료(_TCHAR)"), MB_ICONERROR);
           
 					// =========== 지윤 ============
-					AddClientToListView(ptr->sin_port, ptr->id_nickname_char);
-					DisplayClientList();
+					//AddClientToListView(ptr->sin_port, ptr->id_nickname_char);
+					//DisplayClientList();
 					// =============================
 
 					break;
