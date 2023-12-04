@@ -1,6 +1,22 @@
 #include "stdafx.h"
 
 
+// ID 소켓에 등록하는 함수.
+void setIDInSocket(char cilentID[], SOCKETINFO* ptr) {
+					// 등록할 id
+	//등록할 id를 현재 소켓 구조체에 저장하기
+	// _TCHAR 형 문자열 정의
+	TCHAR cilentID_Tchar[BUFSIZE];
+
+	// char* 형 문자열을 _TCHAR 형 문자열로 변환
+	MultiByteToWideChar(CP_ACP, 0, cilentID, -1, cilentID_Tchar, BUFSIZE);
+	if (_tcscpy(ptr->id_nickname, cilentID_Tchar) == NULL) {
+		// Handle the error
+		err_display("setIDInSocket");
+	}
+
+}
+
 // 소켓 ID (닉네임) 중복확인하는 함수. (
 bool CheckIDDuplication(int nTotalSockets, SOCKETINFO* SocketInfoArray[], _TCHAR id[])
 {							// 총 소켓 개수, 소켓 배열, 클라에게 받은 비교할 닉네임
@@ -18,7 +34,7 @@ bool CheckIDDuplication(int nTotalSockets, SOCKETINFO* SocketInfoArray[], _TCHAR
 	}
 	// 중복이 없는 경우 -> true 반환 (아이디 써도됨)
 	
-	_tcscmp(SocketInfoArray[nTotalSockets - 1] -> id_nickname, id); //A에 B 저장 (현재 내 소켓에 닉네임 저장)
+	_tcscpy(SocketInfoArray[nTotalSockets - 1] -> id_nickname, id); //A에 B 저장 (현재 내 소켓에 닉네임 저장)
 	return true;
 }
 
