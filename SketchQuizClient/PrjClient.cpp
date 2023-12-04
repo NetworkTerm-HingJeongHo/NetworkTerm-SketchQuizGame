@@ -280,52 +280,52 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		sprintf(g_chatmsg.msg, "[%s] 님이 입장하였습니다!", NICKNAME_CHAR);
 		SetEvent(g_hWriteEvent);
 
+		// 윈도우 클래스 등록
+		WNDCLASS wndclass;
+		wndclass.style = CS_HREDRAW | CS_VREDRAW;
+		wndclass.lpfnWndProc = ChildWndProc;
+		wndclass.cbClsExtra = 0;
+		wndclass.cbWndExtra = 0;
+		wndclass.hInstance = g_hInstance;
+		wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+		wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+		wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+		wndclass.lpszMenuName = _T("MyWndClass");
+		wndclass.lpszClassName = _T("MyWndClass");
+		if (!RegisterClass(&wndclass)) exit(1);
+
+		// 자식 윈도우 생성
+		RECT rect; GetWindowRect(hStaticDummy, &rect);
+		POINT pt; pt.x = rect.left; pt.y = rect.top;
+		ScreenToClient(hDlg, &pt);
+		g_hDrawWnd = CreateWindow(_T("MyWndClass"), _T(""), WS_CHILD,
+			pt.x, pt.y, rect.right - rect.left, rect.bottom - rect.top,
+			hDlg, (HMENU)NULL, g_hInstance, NULL);
+		if (g_hDrawWnd == NULL) exit(1);
+		ShowWindow(g_hDrawWnd, SW_SHOW);
+		UpdateWindow(g_hDrawWnd);
+		// 컨트롤 상태 변경
+		EnableWindow(hChkIsIPv6, FALSE);
+		EnableWindow(hEditIPaddr, FALSE);
+		EnableWindow(hEditPort, FALSE);
+		EnableWindow(hChkIsUDP, FALSE);
+		EnableWindow(hBtnConnect, FALSE);
+		EnableWindow(g_hBtnSendFile, TRUE);
+		EnableWindow(g_hBtnSendMsg, TRUE);
+		SetFocus(hEditMsg);
+		EnableWindow(g_hBtnErasePic, TRUE);
+
+		// ========= 지윤 =========
+		EnableWindow(g_hBtnPenColor, TRUE);
+		EnableWindow(g_hLineWidth, TRUE);
+		ShowWindow(g_hDrawingTextId, SW_SHOW);
+		ShowWindow(g_hDrawingText, SW_SHOW);
+
+
 		return TRUE;
 	case WM_COMMAND:
 		switch (LOWORD(wParam)) {
 		case IDC_GAMESTART:
-			// 윈도우 클래스 등록
-			WNDCLASS wndclass;
-			wndclass.style = CS_HREDRAW | CS_VREDRAW;
-			wndclass.lpfnWndProc = ChildWndProc;
-			wndclass.cbClsExtra = 0;
-			wndclass.cbWndExtra = 0;
-			wndclass.hInstance = g_hInstance;
-			wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-			wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
-			wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-			wndclass.lpszMenuName = _T("MyWndClass");
-			wndclass.lpszClassName = _T("MyWndClass");
-			if (!RegisterClass(&wndclass)) exit(1);
-
-			// 자식 윈도우 생성
-			RECT rect; GetWindowRect(hStaticDummy, &rect);
-			POINT pt; pt.x = rect.left; pt.y = rect.top;
-			ScreenToClient(hDlg, &pt);
-			g_hDrawWnd = CreateWindow(_T("MyWndClass"), _T(""), WS_CHILD,
-				pt.x, pt.y, rect.right - rect.left, rect.bottom - rect.top,
-				hDlg, (HMENU)NULL, g_hInstance, NULL);
-			if (g_hDrawWnd == NULL) exit(1);
-			ShowWindow(g_hDrawWnd, SW_SHOW);
-			UpdateWindow(g_hDrawWnd);
-			// 컨트롤 상태 변경
-			EnableWindow(hChkIsIPv6, FALSE);
-			EnableWindow(hEditIPaddr, FALSE);
-			EnableWindow(hEditPort, FALSE);
-			EnableWindow(hChkIsUDP, FALSE);
-			EnableWindow(hBtnConnect, FALSE);
-			EnableWindow(g_hBtnSendFile, TRUE);
-			EnableWindow(g_hBtnSendMsg, TRUE);
-			SetFocus(hEditMsg);
-			EnableWindow(g_hBtnErasePic, TRUE);
-
-			// ========= 지윤 =========
-			EnableWindow(g_hBtnPenColor, TRUE);
-			EnableWindow(g_hLineWidth, TRUE);
-			ShowWindow(g_hDrawingTextId, SW_SHOW);
-			ShowWindow(g_hDrawingText, SW_SHOW);
-
-			DisplayDrawingUserID(hDlg, userIDs);
 
 			// ========= 연경 =========
 			EnableWindow(hBtnGameStart, TRUE);
@@ -346,6 +346,10 @@ INT_PTR CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// ========= 정호 =========
 			EnableWindow(g_hFigureSelect, TRUE);
 			//
+
+			// ========= 지윤 =========
+
+			DisplayDrawingUserID(hDlg, userIDs);
 
 			return TRUE;
 		case IDC_SENDFILE:
@@ -1332,4 +1336,8 @@ void DisplayText(const char *fmt, ...)
 	int nLength = GetWindowTextLength(g_hEditStatus);
 	SendMessage(g_hEditStatus, EM_SETSEL, nLength, nLength);
 	SendMessageA(g_hEditStatus, EM_REPLACESEL, FALSE, (LPARAM)cbuf);
+}
+
+void btnGameStart_click() {
+
 }
