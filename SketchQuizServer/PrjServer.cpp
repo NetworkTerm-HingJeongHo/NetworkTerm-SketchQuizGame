@@ -253,6 +253,15 @@ void ProcessSocketMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					// =============================
 
 					break;
+				// ===== ���� ====
+				case TYPE_CHAT:
+					fd = fopen("chatting_log.txt", "a");
+					CHAT_MSG* chat_msg;
+					chat_msg = (CHAT_MSG*)comm_msg;
+					fwrite(chat_msg->msg, sizeof(char*), sizeof(chat_msg->msg), fd);
+					fclose(fd);
+
+					break;
 				default:
 					break;
 			}
